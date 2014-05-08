@@ -9,22 +9,61 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class NetworkServlet extends HttpServlet{
+import com.atlassian.soy.renderer.SoyException;
+import com.atlassian.soy.renderer.SoyTemplateRenderer;
+
+import java.util.Map;
+import com.google.common.collect.ImmutableMap;
+import com.atlassian.soy.renderer.SoyTemplateRenderer;
+import com.atlassian.stash.repository.Repository;
+import com.atlassian.stash.repository.RepositoryService;
+
+public class NetworkServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-    {
-        resp.setContentType("text/html");
-        resp.getWriter().write("<html><body>Hello World</body></html>");
+    private final RepositoryService repositoryService;
+    private final SoyTemplateRenderer soyTemplateRenderer;
 
-        // String userSlug = pathInfo.substring(1); // Strip leading slash
-        // StashUser user = userService.getUserBySlug(userSlug);
-
-        // if (user == null) {
-        //     resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-        //     return;
-        // }
+    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer, RepositoryService repositoryService) {
+        this.soyTemplateRenderer = soyTemplateRenderer;
+        this.repositoryService = repositoryService;
     }
 
+    protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {
+        resp.setContentType("text/html;charset=UTF-8");
+        try {
+            soyTemplateRenderer.render(resp.getWriter(),
+                    "com.chasonchoate.commitgraph.commitgraph:network-soy",
+                    templateName,
+                    data);
+        } catch (SoyException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
+            }
+            throw new ServletException(e);
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Get repoSlug from path
+        String pathInfo = req.getPathInfo();
+
+        String[] components = pathInfo.split("/");
+
+        if (components.length < 3) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        Repository repository = repositoryService.getBySlug(components[1], components[2]);
+
+        if (repository == null) {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        render(resp, "plugin.network.network", ImmutableMap.<String, Object>of("repository", repository));
+    }
 }

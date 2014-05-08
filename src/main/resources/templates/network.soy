@@ -1,0 +1,20 @@
+{namespace plugin.network}
+
+/**
+ * @param repository Repository object
+ */
+{template .network}
+<html>
+<head>
+    <meta name="decorator" content="stash.repository.general">
+    <meta name="projectKey" content="{$repository.project.key}">
+    <meta name="repositorySlug" content="{$repository.slug}">
+    <meta name="activeTab" content="network-plugin-tab">
+    <title>{$repository.slug} / Example Tab</title>
+</head>
+<body>
+    <h3>Repository: {$repository.slug}</h3>
+    <p>Welcome to my plugin tab in the repository page.</p>
+</body>
+</html>
+{/template}
