@@ -9,24 +9,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import com.atlassian.soy.renderer.SoyException;
-import com.atlassian.soy.renderer.SoyTemplateRenderer;
-
 import java.util.Map;
 import com.google.common.collect.ImmutableMap;
+import com.atlassian.soy.renderer.SoyException;
+import com.atlassian.soy.renderer.SoyTemplateRenderer;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
+import com.atlassian.plugin.webresource.WebResourceManager;
 
 public class NetworkServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
 
     private final RepositoryService repositoryService;
     private final SoyTemplateRenderer soyTemplateRenderer;
+    private final WebResourceManager webResourceManager;
 
-    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer, RepositoryService repositoryService) {
+    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer, RepositoryService repositoryService, WebResourceManager webResourceManager) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
+        this.webResourceManager = webResourceManager;
     }
 
     protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {
@@ -64,6 +66,7 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
 
+        webResourceManager.requireResource("com.chasonchoate.commitgraph.commitgraph:commitgraph-resources");
         render(resp, "plugin.network.network", ImmutableMap.<String, Object>of("repository", repository));
     }
 }
