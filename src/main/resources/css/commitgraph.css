@@ -1,6 +1,5 @@
 #commit-graph-table-wrapper {
-    float: left;
-    width: 75%;
+    width: 100%;
     overflow: hidden;
 }
 
@@ -8,19 +7,28 @@
     font-size: 12px;
 }
 
-#commit-graph-table td {
+#commit-graph-table td, #commit-graph-table th {
     white-space: nowrap;
+    padding: 6px 10px !important;
 }
 
 #commit-graph {
-    margin-top: 44px;
-    width: 25%;
-    float: left;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.commit-container {
+    position: relative;
 }
 
 .commit-date {
     width: 100px;
     overflow: hidden;
+}
+
+.changesetid {
+    font-family: monospace;
 }
 
 .commit-message {

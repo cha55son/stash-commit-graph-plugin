@@ -1,4 +1,5 @@
 (function($) {
+    var $commitTable = null;
     var $commitList = null;
     var $graphBox = null;
     var isEmpty = function(val) { return typeof val === 'undefined'; };
@@ -50,9 +51,9 @@
             if (parentCnt === 1) {
                 // Create branch
                 if (!isEmpty(branches[commit.parents[0].id])) {
-                    for (var j = 1; j < reserve.length; j++)
-                        routes.push([j + offset + 1, j + offset + 1 - 1, reserve[j]]);
-                    for (var j = 0; j < reserve.length; j++)
+                    for (var j = offset + 1; j < reserve.length; j++)
+                        routes.push([j + offset, j + offset - 1, reserve[j]]);
+                    for (var j = 0; j < offset; j++)
                         routes.push([j, j, reserve[j]]);
                     reserve.splice(reserve.indexOf(branch), 1);
                     routes.push([offset, reserve.indexOf(branches[commit.parents[0].id]), branch]);
@@ -76,22 +77,28 @@
 
         $graphBox.children().remove();
         $graphBox.data('plugin_commits_graph', undefined);
+        var cellHeight = $('tr', $commitList).outerHeight(true);
         var $parent = $graphBox.parent();
+        var width = 25 * reserve.length;
+        var dotRadius = 4;
         $graphBox.commits({
-            width: $graphBox.width(),
-            height: $parent.height(),
+            width: width,
+            height: commits.length * cellHeight - (cellHeight / 2),
             orientation: 'vertical',
             data: nodes,
-            y_step: 31,
-            dotRadius: 4,
+            y_step: cellHeight,
+            dotRadius: dotRadius,
             lineWidth: 2
         });
-        console.log('Built the graph ' + Date.now());
+        $graphBox.css('top', cellHeight + (cellHeight / 2) - (dotRadius / 2) - 1);
+        $('.commit-container').css('padding-left', width + 10);
+        console.log(commits);
     };
 
     $(document).ready(function() {
         if (!CommitGraph) return;
-        $commitList = $('#commit-graph-table > tbody');
+        $commitTable = $('#commit-graph-table');
+        $commitList = $('> tbody', $commitTable);
         $graphBox = $('#commit-graph');
         var url = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits';
         var limit = 1000;
@@ -103,7 +110,7 @@
             success: function(data, status) {
                 var debounceFn = _.debounce(function() {
                     buildGraph(data.values);
-                }, 300);
+                }, 200);
                 $(window).resize(debounceFn);
                 buildTable(data.values);
                 buildGraph(data.values);
