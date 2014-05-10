@@ -202,7 +202,6 @@ GraphCanvas.prototype.draw = function () {
       ctx = self.canvas.getContext("2d");
 
   ctx.lineWidth = self.options.lineWidth;
-  console.log(self.data);
 
   var n_commits = self.data.length;
   for (var i=0; i<n_commits; i++) {
