@@ -13,55 +13,53 @@ function Route( commit, data, options ) {
 }
 
 Route.prototype.drawRoute = function ( ctx ) {
-  var self = this;
+    var self = this;
 
-  if (self.options.orientation === "horizontal") {
-	var from_x_hori = self.options.width * self.options.scaleFactor - (self.commit.idx + 0.5) * self.options.x_step * self.options.scaleFactor;
-	var from_y_hori = (self.from + 1) * self.options.y_step * self.options.scaleFactor;
+    if (self.options.orientation === "horizontal") {
+        var from_x_hori = self.options.width * self.options.scaleFactor - (self.commit.idx + 0.5) * self.options.x_step * self.options.scaleFactor;
+        var from_y_hori = (self.from + 1) * self.options.y_step * self.options.scaleFactor;
 
-	var to_x_hori = self.options.width * self.options.scaleFactor - (self.commit.idx + 0.5 + 1) * self.options.x_step * self.options.scaleFactor;
-	var to_y_hori = (self.to + 1) * self.options.y_step * self.options.scaleFactor;
+        var to_x_hori = self.options.width * self.options.scaleFactor - (self.commit.idx + 0.5 + 1) * self.options.x_step * self.options.scaleFactor;
+        var to_y_hori = (self.to + 1) * self.options.y_step * self.options.scaleFactor;
 
-	ctx.strokeStyle = self.commit.graph.get_color(self.branch);
-	ctx.beginPath();
-	ctx.moveTo(from_x_hori, from_y_hori);
-	if (from_y_hori === to_y_hori) {
-	  ctx.lineTo(to_x_hori, to_y_hori);
-	} else if (from_y_hori > to_y_hori) {
-	  ctx.bezierCurveTo(from_x_hori - self.options.x_step * self.options.scaleFactor / 3 * 2,
-						from_y_hori + self.options.y_step * self.options.scaleFactor / 4,
-						to_x_hori + self.options.x_step * self.options.scaleFactor / 3 * 2,
-						to_y_hori - self.options.y_step * self.options.scaleFactor / 4,
-						to_x_hori, to_y_hori);
-	} else if (from_y_hori < to_y_hori) {
-	  ctx.bezierCurveTo(from_x_hori - self.options.x_step * self.options.scaleFactor / 3 * 2,
-						from_y_hori - self.options.y_step * self.options.scaleFactor / 4,
-						to_x_hori + self.options.x_step * self.options.scaleFactor / 3 * 2,
-						to_y_hori + self.options.y_step * self.options.scaleFactor / 4,
-						to_x_hori, to_y_hori);
-	}
-	
-  } else {
-	var from_x = self.options.width * self.options.scaleFactor - (self.from + 1) * self.options.x_step * self.options.scaleFactor;
-	var from_y = (self.commit.idx + 0.5) * self.options.y_step * self.options.scaleFactor;
+        ctx.strokeStyle = self.commit.graph.get_color(self.branch);
+        ctx.beginPath();
+        ctx.moveTo(from_x_hori, from_y_hori);
+        if (from_y_hori === to_y_hori) {
+            ctx.lineTo(to_x_hori, to_y_hori);
+        } else if (from_y_hori > to_y_hori) {
+            ctx.bezierCurveTo(from_x_hori - self.options.x_step * self.options.scaleFactor / 3 * 2,
+                from_y_hori + self.options.y_step * self.options.scaleFactor / 4,
+                to_x_hori + self.options.x_step * self.options.scaleFactor / 3 * 2,
+                to_y_hori - self.options.y_step * self.options.scaleFactor / 4,
+                to_x_hori, to_y_hori);
+        } else if (from_y_hori < to_y_hori) {
+            ctx.bezierCurveTo(from_x_hori - self.options.x_step * self.options.scaleFactor / 3 * 2,
+                from_y_hori - self.options.y_step * self.options.scaleFactor / 4,
+                to_x_hori + self.options.x_step * self.options.scaleFactor / 3 * 2,
+                to_y_hori + self.options.y_step * self.options.scaleFactor / 4,
+                to_x_hori, to_y_hori);
+        }
+    } else {
+        var from_x = self.options.width * self.options.scaleFactor - (self.from + 1) * self.options.x_step * self.options.scaleFactor;
+        var from_y = (self.commit.idx + 0.25) * self.options.y_step * self.options.scaleFactor;
 
-	var to_x = self.options.width * self.options.scaleFactor - (self.to + 1) * self.options.x_step * self.options.scaleFactor;
-	var to_y = (self.commit.idx + 0.5 + 1) * self.options.y_step * self.options.scaleFactor;
+        var to_x = self.options.width * self.options.scaleFactor - (self.to + 1) * self.options.x_step * self.options.scaleFactor;
+        var to_y = (self.commit.idx + 1.25) * self.options.y_step * self.options.scaleFactor;
 
-	ctx.strokeStyle = self.commit.graph.get_color(self.branch);
-	ctx.beginPath();
-	ctx.moveTo(from_x, from_y);
-	if (from_x === to_x) {
-	  ctx.lineTo(to_x, to_y);
-	} else {
-	  ctx.bezierCurveTo(from_x - self.options.x_step * self.options.scaleFactor / 4,
-                        from_y + self.options.y_step * self.options.scaleFactor / 3 * 2,
-                        to_x + self.options.x_step * self.options.scaleFactor / 4,
-                        to_y - self.options.y_step * self.options.scaleFactor / 3 * 2,
-                        to_x, to_y);
-	}
-  }
-
+        ctx.strokeStyle = self.commit.graph.get_color(self.branch);
+        ctx.beginPath();
+        ctx.moveTo(from_x, from_y);
+        if (from_x === to_x) {
+            ctx.lineTo(to_x, to_y);
+        } else {
+            ctx.bezierCurveTo(from_x - self.options.x_step * self.options.scaleFactor / 4,
+                from_y + self.options.y_step * self.options.scaleFactor / 3 * 2,
+                to_x + self.options.x_step * self.options.scaleFactor / 4,
+                to_y - self.options.y_step * self.options.scaleFactor / 3 * 2,
+                to_x, to_y);
+        }
+    }
   ctx.stroke();
 };
 
@@ -82,25 +80,23 @@ function Commit(graph, idx, data, options ) {
 }
 
 Commit.prototype.drawDot = function ( ctx ) {
-  var self = this;
-  var radius = self.options.dotRadius;	// dot radius
-  
-  if (self.options.orientation === "horizontal") {
-	var x_hori = self.options.width * self.options.scaleFactor - (self.idx + 0.5) * self.options.x_step * self.options.scaleFactor;
-	var y_hori = (self.dot_offset + 1) * self.options.y_step * self.options.scaleFactor;
-    ctx.fillStyle = self.graph.get_color(self.dot_branch);
-    ctx.beginPath();
-    ctx.arc(x_hori, y_hori, radius * self.options.scaleFactor, 0, 2 * Math.PI, true);
+    var self = this;
+    var radius = self.options.dotRadius;	// dot radius
 
-  } else {
-	var x = self.options.width * self.options.scaleFactor - (self.dot_offset + 1) * self.options.x_step * self.options.scaleFactor;
-	var y = (self.idx + 0.5) * self.options.y_step * self.options.scaleFactor;
-    ctx.fillStyle = self.graph.get_color(self.dot_branch);
-    ctx.beginPath();
-    ctx.arc(x, y, radius * self.options.scaleFactor, 0, 2 * Math.PI, true);
-  }
-  // ctx.stroke();
-  ctx.fill();
+    if (self.options.orientation === "horizontal") {
+        var x_hori = self.options.width * self.options.scaleFactor - (self.idx + 0.5) * self.options.x_step * self.options.scaleFactor;
+        var y_hori = (self.dot_offset + 1) * self.options.y_step * self.options.scaleFactor;
+        ctx.fillStyle = self.graph.get_color(self.dot_branch);
+        ctx.beginPath();
+        ctx.arc(x_hori, y_hori, radius * self.options.scaleFactor, 0, 2 * Math.PI, true);
+    } else {
+        var x = self.options.width * self.options.scaleFactor - (self.dot_offset + 1) * self.options.x_step * self.options.scaleFactor;
+        var y = self.idx * self.options.y_step * self.options.scaleFactor + Math.round(radius + 1);
+        ctx.fillStyle = self.graph.get_color(self.dot_branch);
+        ctx.beginPath();
+        ctx.arc(x, y, radius * self.options.scaleFactor, 0, 2 * Math.PI, true);
+    }
+    ctx.fill();
 };
 
 // -- Graph Canvas --------------------------------------------------------
@@ -207,11 +203,11 @@ GraphCanvas.prototype.draw = function () {
   for (var i=0; i<n_commits; i++) {
     var commit = new Commit(self, i, self.data[i], self.options);
 
-    commit.drawDot(ctx);
     for (var j=0; j<commit.routes.length; j++) {
       var route = commit.routes[j];
       route.drawRoute(ctx);
     }
+    commit.drawDot(ctx);
   }
 };
 
@@ -255,9 +251,7 @@ Graph.prototype.applyTemplate = function () {
 
 	$.fn.commits = function ( options ) {
 		return this.each(function () {
-			if ( !$( this ).data( "plugin_commits_graph" ) ) {
-				$( this ).data( "plugin_commits_graph", new Graph( this, options ) );
-			}
+            new Graph( this, options );
 		});
 	};
 

@@ -1,0 +1,32 @@
+#commit-graph-table-wrapper {
+    float: left;
+    width: 75%;
+    overflow: hidden;
+}
+
+#commit-graph-table {
+    font-size: 12px;
+}
+
+#commit-graph-table td {
+    white-space: nowrap;
+}
+
+#commit-graph {
+    margin-top: 44px;
+    width: 25%;
+    float: left;
+}
+
+.commit-date {
+    width: 100px;
+    overflow: hidden;
+}
+
+.commit-message {
+    max-width: 400px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+    border-top: 0 !important;
+}
