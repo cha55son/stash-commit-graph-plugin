@@ -48,20 +48,22 @@
             var offset = reserve.indexOf(branch);
             var routes = [];
 
-            if (parentCnt === 1) {
+            if (parentCnt <= 1) {
                 // Create branch
-                if (!isEmpty(branches[commit.parents[0].id])) {
+                if (!isEmpty(commit.parents[0]) && !isEmpty(branches[commit.parents[0].id])) {
                     for (var j = offset + 1; j < reserve.length; j++)
-                        routes.push([j + offset, j + offset - 1, reserve[j]]);
+                        routes.push([j, j - 1, reserve[j]]);
                     for (var j = 0; j < offset; j++)
                         routes.push([j, j, reserve[j]]);
                     reserve.splice(reserve.indexOf(branch), 1);
                     routes.push([offset, reserve.indexOf(branches[commit.parents[0].id]), branch]);
                 // Continue straight
                 } else {
+                    // Remove a branch if we have hit the root (first commit).
                     for (var j = 0; j < reserve.length; j++)
                         routes.push([j, j, reserve[j]]);
-                    branches[commit.parents[0].id] = branch;
+                    if (!isEmpty(commit.parents[0]))
+                        branches[commit.parents[0].id] = branch;
                 }
             // Merge branch
             } else if (parentCnt === 2) {
@@ -71,7 +73,6 @@
                 var otherBranch = getBranch(commit.parents[1].id);
                 routes.push([offset, reserve.indexOf(otherBranch), otherBranch]);
             }
-
             nodes.push([commit.id, [offset, branch], routes]);
         });
 
@@ -101,7 +102,7 @@
         $commitList = $('> tbody', $commitTable);
         $graphBox = $('#commit-graph');
         var url = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits';
-        var limit = 1000;
+        var limit = 500;
         $.ajax({
             url: url,
             data: {
