@@ -6,11 +6,15 @@
     var buildTable = function(commits) {
         $.each(commits, function(i, commit) {
             var date = new Date(commit.authorTimestamp);
+            var isMerge = commit.parents.length > 1;
             $commitList.append([
-                '<tr class="commit-row">',
+                '<tr class="commit-row', (isMerge ? ' merge' : ''), '">',
                     '<td>', commit.author.name, '</td>',
                     '<td>',
-                        '<a class="changesetid" href="/projects/', CommitGraph.projectKey, '/repos/', CommitGraph.repoSlug, '/commits/', commit.id, '">', commit.displayId, '</a>',
+                        '<a class="changesetid" href="/projects/', CommitGraph.projectKey, '/repos/', CommitGraph.repoSlug, '/commits/', commit.id, '">', 
+                            commit.displayId, 
+                        '</a>',
+                        (isMerge ? '<span class="aui-lozenge merge-lozenge abbreviated" title="This commit is a merge.">M</span>' : ''),
                     '</td>',
                     '<td class="commit-message">', commit.message, '</td>',
                     '<td class="commit-date">', date.toDateString(), '</td>',
@@ -18,7 +22,7 @@
             ].join(''));
         });
     };
-    var buildGraph = function(commits) {
+    var buildGraph = function(commits, branchRefs, tags) {
         /*
         * [sha1, dotData, routeData]
         * sha1 (string) The sha1 for the commit
@@ -82,18 +86,23 @@
         var $parent = $graphBox.parent();
         var width = 25 * reserve.length;
         var dotRadius = 4;
+        var graphHeight = commits.length * cellHeight - (cellHeight / 2);
         $graphBox.commits({
             width: width,
-            height: commits.length * cellHeight - (cellHeight / 2),
+            height: graphHeight,
             orientation: 'vertical',
             data: nodes,
             y_step: cellHeight,
             dotRadius: dotRadius,
             lineWidth: 2
         });
-        $graphBox.css('top', cellHeight + (cellHeight / 2) - (dotRadius / 2) - 1);
-        $('.commit-container').css('padding-left', width + 10);
-        console.log(commits);
+        var graphWidth = Math.min(width + 10, $parent.width() * 0.4);
+        $graphBox.css({
+            top: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 1,
+            width: graphWidth,
+            height: graphHeight
+        });
+        $('.commit-container').css('padding-left', graphWidth);
     };
 
     $(document).ready(function() {
@@ -101,21 +110,24 @@
         $commitTable = $('#commit-graph-table');
         $commitList = $('> tbody', $commitTable);
         $graphBox = $('#commit-graph');
-        var url = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits';
-        var limit = 500;
-        $.ajax({
-            url: url,
-            data: {
-                limit: limit
-            }, 
-            success: function(data, status) {
-                var debounceFn = _.debounce(function() {
-                    buildGraph(data.values);
-                }, 200);
-                $(window).resize(debounceFn);
-                buildTable(data.values);
-                buildGraph(data.values);
-            }
+        var baseURL = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
+        var commitsURL = baseURL + '/commits';
+        var branchesURL = baseURL + '/branches';
+        var tagsURL = baseURL + '/tags';
+        $.when(
+            $.ajax({
+                url: commitsURL,
+                data: { limit: 500 }
+            }),
+            $.ajax({ url: branchesURL }),
+            $.ajax({ url: tagsURL })
+        ).then(function(commitData, branchData, tagData) {
+            var debounceFn = _.debounce(function() {
+                buildGraph(commitData[0].values);
+            }, 200);
+            $(window).resize(debounceFn);
+            buildTable(commitData[0].values);
+            buildGraph(commitData[0].values, branchData[0].values, tagData[0].values);
         });
     });
 })(jQuery);

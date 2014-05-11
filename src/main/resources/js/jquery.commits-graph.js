@@ -113,7 +113,6 @@ function GraphCanvas( data, options ) {
 
   self.colors = [
     "#e11d21",
-    //"#eb6420",
     "#fbca04",
     "#009800",
     "#006b75",
@@ -131,7 +130,6 @@ function GraphCanvas( data, options ) {
     "#cccccc",
     "#84b6eb",
     "#e6e6e6",
-    "#ffffff",
     "#cc317c"
   ];
   // self.branch_color = {};

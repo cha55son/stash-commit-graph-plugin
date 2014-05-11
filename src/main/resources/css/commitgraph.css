@@ -16,6 +16,14 @@
     position: absolute;
     top: 0;
     left: 0;
+    max-width: 40%;
+    overflow: auto;
+}
+
+#commit-graph canvas {
+    position: absolute;
+    top: 0;
+    right: 10px;
 }
 
 .commit-container {
@@ -37,4 +45,18 @@
     overflow: hidden;
     display: block;
     border-top: 0 !important;
+}
+
+.commits-table tr.merge td {
+    -webkit-transition: opacity 0.3s;
+    -moz-transition: opacity 0.3s;
+    -ms-transition: opacity 0.3s;
+    -o-transition: opacity 0.3s;
+    transition: opacity 0.3s;
+    opacity: 0.35;
+    filter: alpha(opacity=35);
+}
+
+.commits-table .changesetid + .merge-lozenge {
+    margin-left: 5px;
 }
