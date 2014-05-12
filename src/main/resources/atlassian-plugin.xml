@@ -17,6 +17,7 @@
     <dependency>com.atlassian.auiplugin:ajs</dependency>
     <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
     <resource type="download" name="underscore.js" location="/js/underscore.js"/>
+    <resource type="download" name="knockout.js" location="/js/knockout.js"/>
     <resource type="download" name="jquery.commits-graph.js" location="/js/jquery.commits-graph.js"/>
     <resource type="download" name="commitgraph.js" location="/js/commitgraph.js"/>
     <resource type="download" name="images/" location="/images"/>

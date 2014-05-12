@@ -1,13 +1,49 @@
-(function($) {
-    var $commitTable = null;
-    var $commitList = null;
-    var $graphBox = null;
+(function($, ko, _) {
     var isEmpty = function(val) { return typeof val === 'undefined'; };
-    var buildTable = function(commits) {
+    // CommitGraph should be added by the template
+
+    var CommitGraphVM = function() {
+        this.els = { };
+        this.els.$commitTable = $('#commit-graph-table');
+        this.els.$commitList = $('> tbody', this.els.$commitTable);
+        this.els.$graphBox = $('#commit-graph');
+
+        this.urls = { };
+        this.urls.base = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
+        this.urls.commits = this.urls.base + '/commits';
+        this.urls.branches = this.urls.base + '/branches';
+        this.urls.tags = this.urls.base + '/tags';
+
+        this.isLoading = ko.observable(false);
+
+        this.getData();
+    };
+    CommitGraphVM.prototype.getData = function() {
+        var self = this;
+        this.isLoading(true);
+        $.when(
+            $.ajax({
+                url: this.urls.commits,
+                data: { limit: 500 }
+            }),
+            $.ajax({ url: this.urls.branches }),
+            $.ajax({ url: this.urls.tags })
+        ).then(function(commitData, branchData, tagData) {
+            self.isLoading(false);
+            // var debounceFn = _.debounce(function() {
+            //     buildGraph(commitData[0].values);
+            // }, 200);
+            // $(window).resize(debounceFn);
+            self.buildTable(commitData[0].values);
+            // buildGraph(commitData[0].values, branchData[0].values, tagData[0].values);
+        });
+    };
+    CommitGraphVM.prototype.buildTable = function(commits) {
+        var self = this;
         $.each(commits, function(i, commit) {
             var date = new Date(commit.authorTimestamp);
             var isMerge = commit.parents.length > 1;
-            $commitList.append([
+            self.els.$commitList.append([
                 '<tr class="commit-row', (isMerge ? ' merge' : ''), '">',
                     '<td>', commit.author.name, '</td>',
                     '<td>',
@@ -22,7 +58,7 @@
             ].join(''));
         });
     };
-    var buildGraph = function(commits, branchRefs, tags) {
+    CommitGraphVM.prototype.buildGraph = function(commits, branchRefs, tagRefs) {
         /*
         * [sha1, dotData, routeData]
         * sha1 (string) The sha1 for the commit
@@ -107,27 +143,6 @@
 
     $(document).ready(function() {
         if (!CommitGraph) return;
-        $commitTable = $('#commit-graph-table');
-        $commitList = $('> tbody', $commitTable);
-        $graphBox = $('#commit-graph');
-        var baseURL = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
-        var commitsURL = baseURL + '/commits';
-        var branchesURL = baseURL + '/branches';
-        var tagsURL = baseURL + '/tags';
-        $.when(
-            $.ajax({
-                url: commitsURL,
-                data: { limit: 500 }
-            }),
-            $.ajax({ url: branchesURL }),
-            $.ajax({ url: tagsURL })
-        ).then(function(commitData, branchData, tagData) {
-            var debounceFn = _.debounce(function() {
-                buildGraph(commitData[0].values);
-            }, 200);
-            $(window).resize(debounceFn);
-            buildTable(commitData[0].values);
-            buildGraph(commitData[0].values, branchData[0].values, tagData[0].values);
-        });
+        ko.applyBindings(new CommitGraphVM());
     });
-})(jQuery);
+})(jQuery, ko, _);

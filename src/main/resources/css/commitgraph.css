@@ -1,3 +1,14 @@
+.commit-graph-loader {
+    text-align: center;
+    color: #777;
+}
+
+.commit-graph-loader h1 {
+    margin: 0;
+    font-weight: bold;
+    font-size: 30px;
+}
+
 #commit-graph-table-wrapper {
     width: 100%;
     overflow: hidden;
