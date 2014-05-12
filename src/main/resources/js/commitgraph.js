@@ -2,6 +2,12 @@
     var isEmpty = function(val) { return typeof val === 'undefined'; };
     // CommitGraph should be added by the template
 
+    var CommitVM = function(data) {
+        $.extend(this, data);
+        this.isMerge = this.parents.length > 1;
+        this.date = new Date(this.authorTimestamp);
+        this.commitURL = '/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits/' + this.id;
+    };
     var CommitGraphVM = function() {
         this.els = { };
         this.els.$commitTable = $('#commit-graph-table');
@@ -15,6 +21,9 @@
         this.urls.tags = this.urls.base + '/tags';
 
         this.isLoading = ko.observable(false);
+        this.commits = ko.observableArray();
+        this.branches = ko.observableArray();
+        this.tags = ko.observableArray();
 
         this.getData();
     };
@@ -34,33 +43,17 @@
             //     buildGraph(commitData[0].values);
             // }, 200);
             // $(window).resize(debounceFn);
-            self.buildTable(commitData[0].values);
-            // buildGraph(commitData[0].values, branchData[0].values, tagData[0].values);
+            self.commits($.map(commitData[0].values, function(commit) {
+                return new CommitVM(commit);
+            }));
+            self.branches(branchData[0].values);
+            self.tags(tagData[0].values);
+            self.buildGraph();
         });
     };
-    CommitGraphVM.prototype.buildTable = function(commits) {
-        var self = this;
-        $.each(commits, function(i, commit) {
-            var date = new Date(commit.authorTimestamp);
-            var isMerge = commit.parents.length > 1;
-            self.els.$commitList.append([
-                '<tr class="commit-row', (isMerge ? ' merge' : ''), '">',
-                    '<td>', commit.author.name, '</td>',
-                    '<td>',
-                        '<a class="changesetid" href="/projects/', CommitGraph.projectKey, '/repos/', CommitGraph.repoSlug, '/commits/', commit.id, '">', 
-                            commit.displayId, 
-                        '</a>',
-                        (isMerge ? '<span class="aui-lozenge merge-lozenge abbreviated" title="This commit is a merge.">M</span>' : ''),
-                    '</td>',
-                    '<td class="commit-message">', commit.message, '</td>',
-                    '<td class="commit-date">', date.toDateString(), '</td>',
-                '</tr>'
-            ].join(''));
-        });
-    };
-    CommitGraphVM.prototype.buildGraph = function(commits, branchRefs, tagRefs) {
+    CommitGraphVM.prototype.buildGraph = function() {
         /*
-        * [sha1, dotData, routeData]
+        * node = [sha1, dotData, routeData]
         * sha1 (string) The sha1 for the commit
         * dotData (array) [0]: Branch
         *                 [1]: Dot color
@@ -82,7 +75,7 @@
             return branches[sha];
         };
 
-        $.each(commits, function(i, commit) {
+        $.each(this.commits(), function(i, commit) {
             var branch = getBranch(commit.id);
             var parentCnt = commit.parents.length;
             var offset = reserve.indexOf(branch);
@@ -116,14 +109,13 @@
             nodes.push([commit.id, [offset, branch], routes]);
         });
 
-        $graphBox.children().remove();
-        $graphBox.data('plugin_commits_graph', undefined);
-        var cellHeight = $('tr', $commitList).outerHeight(true);
-        var $parent = $graphBox.parent();
+        this.els.$graphBox.children().remove();
+        var cellHeight = $('tr', this.els.$commitList).outerHeight(true);
+        var $parent = this.els.$graphBox.parent();
         var width = 25 * reserve.length;
         var dotRadius = 4;
-        var graphHeight = commits.length * cellHeight - (cellHeight / 2);
-        $graphBox.commits({
+        var graphHeight = this.commits().length * cellHeight - (cellHeight / 2);
+        this.els.$graphBox.commits({
             width: width,
             height: graphHeight,
             orientation: 'vertical',
@@ -133,7 +125,7 @@
             lineWidth: 2
         });
         var graphWidth = Math.min(width + 10, $parent.width() * 0.4);
-        $graphBox.css({
+        this.els.$graphBox.css({
             top: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 1,
             width: graphWidth,
             height: graphHeight

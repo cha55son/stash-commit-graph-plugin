@@ -7,7 +7,7 @@
     <vendor name="${project.organization.name}" url="${project.organization.url}"/>
     <param name="plugin-icon">images/pluginIcon.png</param>
     <param name="plugin-logo">images/pluginLogo.png</param>
-  </plugin-info>
+  </plugin-info> 
 
   <!-- add our i18n resource -->
   <resource type="i18n" name="i18n" location="commitgraph"/>
