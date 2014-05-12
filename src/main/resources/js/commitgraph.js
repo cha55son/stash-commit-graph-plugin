@@ -39,10 +39,10 @@
             $.ajax({ url: this.urls.tags })
         ).then(function(commitData, branchData, tagData) {
             self.isLoading(false);
-            // var debounceFn = _.debounce(function() {
-            //     buildGraph(commitData[0].values);
-            // }, 200);
-            // $(window).resize(debounceFn);
+            var debounceFn = _.debounce(function() {
+                self.buildGraph(commitData[0].values);
+            }, 200);
+            $(window).resize(debounceFn);
             self.commits($.map(commitData[0].values, function(commit) {
                 return new CommitVM(commit);
             }));
@@ -53,7 +53,7 @@
     };
     CommitGraphVM.prototype.buildGraph = function() {
         /*
-        * node = [sha1, dotData, routeData]
+        * node = [sha1, dotData, routeData, labelData]
         * sha1 (string) The sha1 for the commit
         * dotData (array) [0]: Branch
         *                 [1]: Dot color
@@ -61,7 +61,9 @@
         *                   [x][0]: From branch
         *                   [x][1]: To branch
         *                   [x][2]: Route color
+        * labelData (array) Tags to be added to the graph.
         */
+        var self = this;
         var nodes = [];
         var branchCnt = 0;
         var reserve = [];
@@ -106,7 +108,17 @@
                 var otherBranch = getBranch(commit.parents[1].id);
                 routes.push([offset, reserve.indexOf(otherBranch), otherBranch]);
             }
-            nodes.push([commit.id, [offset, branch], routes]);
+            // Add labels to the commit
+            var labels = [];
+            $.each(self.branches(), function(i, branch) {
+                if (branch.latestChangeset === commit.id)
+                    labels.push(branch.displayId);
+            });
+            $.each(self.tags(), function(i, tag) {
+                if (tag.latestChangeset === commit.id)
+                    labels.push(tag.displayId);
+            });
+            nodes.push([commit.id, [offset, branch], routes, labels]);
         });
 
         this.els.$graphBox.children().remove();
@@ -114,7 +126,7 @@
         var $parent = this.els.$graphBox.parent();
         var width = 25 * reserve.length;
         var dotRadius = 4;
-        var graphHeight = this.commits().length * cellHeight - (cellHeight / 2);
+        var graphHeight = this.commits().length * cellHeight - (cellHeight / 2) + (cellHeight / 2);
         this.els.$graphBox.commits({
             width: width,
             height: graphHeight,
@@ -126,7 +138,7 @@
         });
         var graphWidth = Math.min(width + 10, $parent.width() * 0.4);
         this.els.$graphBox.css({
-            top: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 1,
+            top: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
             width: graphWidth,
             height: graphHeight
         });

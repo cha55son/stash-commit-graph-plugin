@@ -11,15 +11,11 @@ function Route(commit, data, options) {
 }
 
 Route.prototype.drawRoute = function(ctx) {
+    var topOffset = 10 * this.options.scaleFactor;
     var from_x = this.options.width - this.from * this.options.x_step - this.options.dotRadius;
-    var from_y = this.commit.idx * this.options.y_step + this.options.dotRadius;
+    var from_y = topOffset + this.commit.idx * this.options.y_step + this.options.dotRadius;
     var to_x = this.options.width - this.to * this.options.x_step - this.options.dotRadius;
-    var to_y = (this.commit.idx + 1) * this.options.y_step + this.options.dotRadius;
-    // var from_x = this.options.width - (this.from + 1) * this.options.x_step;
-    // var from_y = (this.commit.idx + 0.5) * this.options.y_step;
-
-    // var to_x = this.options.width - this.to * this.options.x_step - this.options.dotRadius;
-    // var to_y = (this.commit.idx + 1) * this.options.y_step + this.options.dotRadius;
+    var to_y = topOffset + (this.commit.idx + 1) * this.options.y_step + this.options.dotRadius;
 
     ctx.strokeStyle = this.commit.graph.get_color(this.branch);
     ctx.beginPath();
@@ -53,12 +49,13 @@ function Commit(graph, idx, data, options) {
     // Get the dot coords
     this.pos = { };
     this.pos.x = this.options.width - this.dot_offset * this.options.x_step - this.options.dotRadius;
-    this.pos.y = this.idx * this.options.y_step + this.options.dotRadius;
+    this.pos.y = (10 * this.options.scaleFactor) + this.idx * this.options.y_step + this.options.dotRadius;
 
     var self = this;
     this.routes = $.map(data[2], function(e) { 
         return new Route(self, e, options); 
     });
+    this.labels = data[3];
 }
 
 Commit.prototype.drawDot = function(ctx) {
@@ -66,6 +63,43 @@ Commit.prototype.drawDot = function(ctx) {
     ctx.beginPath();
     ctx.arc(this.pos.x, this.pos.y, this.options.dotRadius, 0, 2 * Math.PI, true);
     ctx.fill();
+};
+
+Commit.prototype.drawLabel = function(ctx) {
+    if (this.labels.length === 0) return;
+    var labelTipColor = '#333';
+    // Draw the label tip
+    ctx.fillStyle = labelTipColor;
+    ctx.beginPath();
+    var triSize = 10 * this.options.scaleFactor;
+    var transX = this.pos.x - triSize - 5;
+    var transY = this.pos.y - (triSize / 2);
+    ctx.moveTo(transX, transY);
+    ctx.lineTo(transX + (triSize / 2), transY + (triSize / 2));
+    ctx.lineTo(transX, transY + triSize);
+    ctx.closePath();
+    ctx.fill();
+    // Gather the text for the label
+    var labelText = this.labels.join(', ');
+    var textHeight = 10 * this.options.scaleFactor;
+    ctx.font = textHeight + 'px monospace';
+    var textWidth = ctx.measureText(labelText).width * this.options.scaleFactor;
+    // Draw the label body
+    ctx.beginPath();
+    var padding = 10 * this.options.scaleFactor;
+    var labelHeight = textHeight + padding;
+    var labelWidth = textWidth + padding;
+    var labelX = transX - labelWidth;
+    var labelY = transY + (triSize / 2) - (labelHeight / 2);
+    ctx.rect(labelX, labelY, labelWidth, labelHeight);
+    ctx.fillStyle = labelTipColor;
+    ctx.fill();
+    // Draw the text
+    ctx.fillStyle = '#FFF';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(labelText, labelX + (padding / 2), labelY + (padding / 2) + (textHeight / 2));
+
 };
 
 // -- Graph Canvas --------------------------------------------------------
@@ -177,6 +211,7 @@ GraphCanvas.prototype.draw = function () {
             route.drawRoute(ctx);
         }
         commit.drawDot(ctx);
+        commit.drawLabel(ctx);
     }
 };
 
