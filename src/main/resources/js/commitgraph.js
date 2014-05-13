@@ -15,7 +15,7 @@
         this.els.$graphBox = $('#commit-graph');
 
         this.urls = { };
-        this.urls.base = '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
+        this.urls.base = AJS.contextPath() + '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
         this.urls.commits = this.urls.base + '/commits';
         this.urls.branches = this.urls.base + '/branches';
         this.urls.tags = this.urls.base + '/tags';
