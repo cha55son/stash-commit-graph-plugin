@@ -1,4 +1,5 @@
 ;(function($, window, undefined) {
+var newBox = function() { return { x: { min: Infinity, max: 0 }, y: { min: Infinity, max: 0 } } };
 // -- Route --------------------------------------------------------
 
 function Route(commit, data, options) {
@@ -11,11 +12,16 @@ function Route(commit, data, options) {
 }
 
 Route.prototype.drawRoute = function(ctx) {
+    var box = newBox();
     var topOffset = 10 * this.options.scaleFactor;
     var from_x = this.options.width - this.from * this.options.x_step - this.options.dotRadius;
     var from_y = topOffset + this.commit.idx * this.options.y_step + this.options.dotRadius;
     var to_x = this.options.width - this.to * this.options.x_step - this.options.dotRadius;
     var to_y = topOffset + (this.commit.idx + 1) * this.options.y_step + this.options.dotRadius;
+    box.x.min = from_x;
+    box.y.min = from_y;
+    box.x.max = to_x;
+    box.y.max = to_y;
 
     ctx.strokeStyle = this.commit.graph.get_color(this.branch);
     ctx.beginPath();
@@ -32,6 +38,7 @@ Route.prototype.drawRoute = function(ctx) {
         );
     }
     ctx.stroke();
+    return box;
 };
 
 // -- Commit Node --------------------------------------------------------
@@ -59,14 +66,21 @@ function Commit(graph, idx, data, options) {
 }
 
 Commit.prototype.drawDot = function(ctx) {
+    var box = newBox();
     ctx.fillStyle = this.graph.get_color(this.dot_branch);
     ctx.beginPath();
     ctx.arc(this.pos.x, this.pos.y, this.options.dotRadius, 0, 2 * Math.PI, true);
+    box.x.min = this.pos.x;
+    box.y.min = this.pos.y;
+    box.x.max = this.pos.x + (this.options.dotRadius * 2);
+    box.y.max = this.pos.y + (this.options.dotRadius * 2);
     ctx.fill();
+    return box;
 };
 
 Commit.prototype.drawLabel = function(ctx) {
-    if (this.labels.length === 0) return;
+    var box = newBox();
+    if (this.labels.length === 0) return box;
     var labelTipColor = '#333';
     // Draw the label tip
     ctx.fillStyle = labelTipColor;
@@ -83,7 +97,7 @@ Commit.prototype.drawLabel = function(ctx) {
     var labelText = this.labels.join(', ');
     var textHeight = 10 * this.options.scaleFactor;
     ctx.font = textHeight + 'px monospace';
-    var textWidth = ctx.measureText(labelText).width * this.options.scaleFactor;
+    var textWidth = ctx.measureText(labelText).width;
     // Draw the label body
     ctx.beginPath();
     var padding = 10 * this.options.scaleFactor;
@@ -91,6 +105,10 @@ Commit.prototype.drawLabel = function(ctx) {
     var labelWidth = textWidth + padding;
     var labelX = transX - labelWidth;
     var labelY = transY + (triSize / 2) - (labelHeight / 2);
+    box.x.min = labelX;
+    box.y.min = labelY;
+    box.x.max = labelX + labelWidth + (triSize / 2);
+    box.y.max = labelY + labelHeight;
     ctx.rect(labelX, labelY, labelWidth, labelHeight);
     ctx.fillStyle = labelTipColor;
     ctx.fill();
@@ -99,7 +117,7 @@ Commit.prototype.drawLabel = function(ctx) {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(labelText, labelX + (padding / 2), labelY + (padding / 2) + (textHeight / 2));
-
+    return box;
 };
 
 // -- Graph Canvas --------------------------------------------------------
@@ -166,7 +184,7 @@ function GraphCanvas( data, options ) {
     "#e6e6e6",
     "#cc317c"
   ];
-  // self.branch_color = {};
+  self.boundingBox = newBox();
 }
 
 GraphCanvas.prototype.toHTML = function () {
@@ -177,28 +195,14 @@ GraphCanvas.prototype.toHTML = function () {
   return $(self.canvas);
 };
 
-GraphCanvas.prototype.get_color = function (branch) {
+GraphCanvas.prototype.get_color = function(branch) {
   var self = this;
 
   var n = self.colors.length;
   return self.colors[branch % n];
 };
 
-/*
-
-[
-  sha,
-  [offset, branch], //dot
-  [
-    [from, to, branch],  // route1
-    [from, to, branch],  // route2
-    [from, to, branch],
-  ]  // routes
-],
-
-*/
-// draw
-GraphCanvas.prototype.draw = function () {
+GraphCanvas.prototype.draw = function() {
     var self = this,
     ctx = self.canvas.getContext("2d");
     ctx.lineWidth = self.options.lineWidth;
@@ -206,13 +210,24 @@ GraphCanvas.prototype.draw = function () {
     var n_commits = self.data.length;
     for (var i=0; i<n_commits; i++) {
         var commit = new Commit(self, i, self.data[i], self.options);
-        for (var j=0; j<commit.routes.length; j++) {
+        for (var j = commit.routes.length - 1; j >= 0; j--) {
             var route = commit.routes[j];
-            route.drawRoute(ctx);
+            this.checkBox(route.drawRoute(ctx));
         }
-        commit.drawDot(ctx);
-        commit.drawLabel(ctx);
+        this.checkBox(commit.drawDot(ctx));
+        this.checkBox(commit.drawLabel(ctx));
     }
+};
+
+GraphCanvas.prototype.checkBox = function(box) {
+    if (box.x.min < this.boundingBox.x.min)
+        this.boundingBox.x.min = box.x.min;
+    if (box.y.min < this.boundingBox.y.min)
+        this.boundingBox.y.min = box.y.min;
+    if (box.x.max > this.boundingBox.x.max)
+        this.boundingBox.x.max = box.x.max;
+    if (box.y.max > this.boundingBox.y.max)
+        this.boundingBox.y.max = box.y.max;
 };
 
 // -- Graph Plugin ------------------------------------------------------------
@@ -223,7 +238,7 @@ function Graph( element, options ) {
         height: 800,
         width: 200,
         y_step: 20,
-        x_step: 20,
+        x_step: 15,
         orientation: "vertical",
         dotRadius: 3,
         lineWidth: 2,
@@ -245,6 +260,7 @@ Graph.prototype.applyTemplate = function() {
         graphCanvas = new GraphCanvas(self.data, self.options),
         $canvas = graphCanvas.toHTML();
 	$canvas.appendTo(self.$container);
+    this.boundingBox = graphCanvas.boundingBox;
 };
 
 // -- Attach plugin to jQuery's prototype --------------------------------------

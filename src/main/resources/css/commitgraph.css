@@ -27,14 +27,13 @@
     position: absolute;
     top: 0;
     left: 0;
-    max-width: 40%;
+    max-width: 50%;
     overflow: auto;
 }
 
 #commit-graph canvas {
-    position: absolute;
-    top: 0;
-    right: 10px;
+    float: right;
+    margin-right: 10px;
 }
 
 .commit-container {

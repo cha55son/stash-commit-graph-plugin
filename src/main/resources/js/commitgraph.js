@@ -124,7 +124,7 @@
         this.els.$graphBox.children().remove();
         var cellHeight = $('tr', this.els.$commitList).outerHeight(true);
         var $parent = this.els.$graphBox.parent();
-        var width = 25 * reserve.length;
+        var width = 1000;
         var dotRadius = 4;
         var graphHeight = this.commits().length * cellHeight - (cellHeight / 2) + (cellHeight / 2);
         this.els.$graphBox.commits({
@@ -134,15 +134,18 @@
             data: nodes,
             y_step: cellHeight,
             dotRadius: dotRadius,
-            lineWidth: 2
+            lineWidth: 2,
+            finished: function(graph) {
+                var graphWidth = graph.boundingBox.x.max - graph.boundingBox.x.min;
+                width = Math.min(graphWidth, $parent.width() * 0.5);
+                self.els.$graphBox.css({
+                    paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
+                    width: width,
+                    height: graphHeight
+                });
+                $('.commit-container').css('padding-left', width);
+            }
         });
-        var graphWidth = Math.min(width + 10, $parent.width() * 0.4);
-        this.els.$graphBox.css({
-            top: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
-            width: graphWidth,
-            height: graphHeight
-        });
-        $('.commit-container').css('padding-left', graphWidth);
     };
 
     $(document).ready(function() {
