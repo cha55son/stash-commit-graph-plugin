@@ -6,7 +6,7 @@
     </plugin-info>
 
     <!-- from our base plugin -->
-    <component-import key="myComponent" interface="com.chasonchoate.commitgraph.MyPluginComponent"/>
+    <component-import key="myComponent" interface="com.plugin.commitgraph.MyPluginComponent"/>
 
     <!-- from the product container -->
     <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties" />

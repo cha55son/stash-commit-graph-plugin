@@ -1,9 +1,9 @@
-package it.com.chasonchoate.commitgraph;
+package it.com.plugin.commitgraph;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import com.atlassian.plugins.osgi.test.AtlassianPluginsTestRunner;
-import com.chasonchoate.commitgraph.MyPluginComponent;
+import com.plugin.commitgraph.MyPluginComponent;
 import com.atlassian.sal.api.ApplicationProperties;
 
 import static org.junit.Assert.assertEquals;

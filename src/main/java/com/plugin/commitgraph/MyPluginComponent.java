@@ -1,4 +1,4 @@
-package com.chasonchoate.commitgraph;
+package com.plugin.commitgraph;
 
 public interface MyPluginComponent
 {

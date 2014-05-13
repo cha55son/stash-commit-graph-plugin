@@ -25,8 +25,8 @@
   </web-resource>
 
   <!-- publish our component -->
-  <component key="myPluginComponent" class="com.chasonchoate.commitgraph.MyPluginComponentImpl" public="true">
-    <interface>com.chasonchoate.commitgraph.MyPluginComponent</interface>
+  <component key="myPluginComponent" class="com.plugin.commitgraph.MyPluginComponentImpl" public="true">
+    <interface>com.plugin.commitgraph.MyPluginComponent</interface>
   </component>
 
   <!-- import from the product container -->
@@ -45,8 +45,8 @@
 
   <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
     <label>Network</label>
+    <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
     <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
-    <tooltip>Hooray, we have a tab!</tooltip>
   </web-item>
 
   <stash-resource key="network-soy" name="Network Soy Templates">

@@ -1,8 +1,8 @@
-package ut.com.chasonchoate.commitgraph;
+package ut.com.plugin.commitgraph;
 
 import org.junit.Test;
-import com.chasonchoate.commitgraph.MyPluginComponent;
-import com.chasonchoate.commitgraph.MyPluginComponentImpl;
+import com.plugin.commitgraph.MyPluginComponent;
+import com.plugin.commitgraph.MyPluginComponentImpl;
 
 import static org.junit.Assert.assertEquals;
 

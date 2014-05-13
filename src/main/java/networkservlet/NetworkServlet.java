@@ -35,7 +35,7 @@ public class NetworkServlet extends HttpServlet {
         resp.setContentType("text/html;charset=UTF-8");
         try {
             soyTemplateRenderer.render(resp.getWriter(),
-                    "com.chasonchoate.commitgraph.commitgraph:network-soy",
+                    "com.plugin.commitgraph.commitgraph:network-soy",
                     templateName,
                     data);
         } catch (SoyException e) {
@@ -66,7 +66,7 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
 
-        webResourceManager.requireResource("com.chasonchoate.commitgraph.commitgraph:commitgraph-resources");
+        webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, "plugin.network.network", ImmutableMap.<String, Object>of("repository", repository));
     }
 }
