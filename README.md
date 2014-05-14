@@ -11,7 +11,7 @@ git clone https://github.com/cha55son/stash-commit-graph-plugin
 
 ```
 cd stash-commit-graph-plugin
-atlas-run --context-path ROOT
+atlas-run
 ```
 
 #### Congratulations! You're ready to rock!
