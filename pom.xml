@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.plugin.commitgraph</groupId>
     <artifactId>commitgraph</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1</version>
     <organization>
-        <name>Example Company</name>
-        <url>http://www.example.com/</url>
+        <name>Chason Choate</name>
+        <url>https://github.com/cha55son</url>
     </organization>
-    <name>commitgraph</name>
-    <description>This is the com.plugin.commitgraph:commitgraph plugin for Atlassian Stash.</description>
+    <name>Commit Graph</name>
+    <description>The missing commit graph for Atlassian Stash.</description>
     <packaging>atlassian-plugin</packaging>
     <dependencyManagement>
         <dependencies>
