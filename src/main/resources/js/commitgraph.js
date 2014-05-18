@@ -86,6 +86,10 @@
         });
         return deferred.promise();
     };
+    CommitGraphVM.prototype.shortenName = function(name) {
+        if (name.length <= 25) return name;
+        return name.slice(0, 11) + '..' + name.slice(-11);
+    };
     CommitGraphVM.prototype.buildGraph = function() {
         /*
         * node = [sha1, dotData, routeData, labelData]
@@ -147,11 +151,11 @@
             var labels = [];
             $.each(self.branches(), function(i, branch) {
                 if (branch.latestChangeset === commit.id)
-                    labels.push(branch.displayId);
+                    labels.push(self.shortenName(branch.displayId));
             });
             $.each(self.tags(), function(i, tag) {
                 if (tag.latestChangeset === commit.id)
-                    labels.push(tag.displayId);
+                    labels.push(self.shortenName(tag.displayId));
             });
             nodes.push([commit.id, [offset, branch], routes, labels]);
         });
