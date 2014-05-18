@@ -2,12 +2,6 @@
     var isEmpty = function(val) { return typeof val === 'undefined'; };
     // CommitGraph should be added by the template
 
-    var CommitVM = function(data) {
-        $.extend(this, data);
-        this.isMerge = this.parents.length > 1;
-        this.date = new Date(this.authorTimestamp);
-        this.commitURL = '/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits/' + this.id;
-    };
     var CommitGraphVM = function() {
         this.els = { };
         this.els.$commitTable = $('#commit-graph-table');
@@ -25,6 +19,9 @@
         this.branches = ko.observableArray();
         this.tags = ko.observableArray();
 
+        this.ajax = { };
+        this.ajax.limit = 500;
+
         this.getData();
     };
     CommitGraphVM.prototype.getData = function() {
@@ -33,23 +30,61 @@
         $.when(
             $.ajax({
                 url: this.urls.commits,
-                data: { limit: 500 }
+                data: { limit: this.ajax.limit }
             }),
             $.ajax({ url: this.urls.branches }),
             $.ajax({ url: this.urls.tags })
-        ).then(function(commitData, branchData, tagData) {
-            self.isLoading(false);
-            var debounceFn = _.debounce(function() {
-                self.buildGraph(commitData[0].values);
-            }, 200);
-            $(window).resize(debounceFn);
-            self.commits($.map(commitData[0].values, function(commit) {
-                return new CommitVM(commit);
-            }));
+        ).then(function(masterCommitData, branchData, tagData) {
             self.branches(branchData[0].values);
             self.tags(tagData[0].values);
-            self.buildGraph();
+
+            var commits = masterCommitData[0].values;
+            self.getBranchCommits().then(function(branchCommits) {
+                // Remove duplicate commits
+                $.each(commits, function(i, masterCommit) {
+                    // Start at the end so we don't mess up the iterator
+                    for (var j = branchCommits.length - 1; j >= 0; j--)
+                        if (branchCommits[j].id === masterCommit.id)
+                            branchCommits.splice(j, 1);
+                });
+                // Merge branch commits into the mainline by timestamp
+                $.each(branchCommits, function(i, branchCommit) {
+                    $.each(commits, function(j, masterCommit) {
+                        if (branchCommit.authorTimestamp < masterCommit.authorTimestamp) return; 
+                        commits.splice(j, 0, branchCommit);
+                        return false;
+                    });
+                });
+                var debounceFn = _.debounce(function() {
+                    self.buildGraph();
+                }, 200);
+                $(window).resize(debounceFn);
+                self.commits($.map(commits, function(commit) {
+                    return new CommitVM(commit);
+                }));
+                self.isLoading(false);
+                self.buildGraph();
+            });
         });
+    };
+    CommitGraphVM.prototype.getBranchCommits = function() {
+        var deferred = $.Deferred();
+        var cnt = this.branches().length;
+        var branchCommits = [];
+        var self = this;
+        $.each(this.branches(), function(i, branch) {
+            $.ajax({
+                url: self.urls.commits,
+                data: { until: branch.id, limit: self.ajax.limit },
+                success: function(commitData, status) {
+                    branchCommits = branchCommits.concat(commitData.values);
+                },
+                complete: function() {
+                    if (--cnt === 0) deferred.resolve(branchCommits);
+                }
+            });
+        });
+        return deferred.promise();
     };
     CommitGraphVM.prototype.buildGraph = function() {
         /*
@@ -122,7 +157,7 @@
         });
 
         this.els.$graphBox.children().remove();
-        var cellHeight = $('tr', this.els.$commitList).outerHeight(true);
+        var cellHeight = $('.commit-row', this.els.$commitList).outerHeight(true);
         var $parent = this.els.$graphBox.parent();
         var width = 1000;
         var dotRadius = 4;
@@ -146,6 +181,13 @@
                 $('.commit-container').css('padding-left', width);
             }
         });
+    };
+
+    var CommitVM = function(data) {
+        $.extend(this, data);
+        this.isMerge = this.parents.length > 1;
+        this.date = new Date(this.authorTimestamp);
+        this.commitURL = AJS.contextPath() + '/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits/' + this.id;
     };
 
     $(document).ready(function() {
