@@ -171,7 +171,7 @@
             dotRadius: dotRadius,
             lineWidth: 2,
             finished: function(graph) {
-                var graphWidth = graph.boundingBox.x.max - graph.boundingBox.x.min;
+                var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
                 width = Math.min(graphWidth, $parent.width() * 0.5);
                 self.els.$graphBox.css({
                     paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,

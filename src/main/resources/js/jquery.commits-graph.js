@@ -23,6 +23,7 @@ Route.prototype.drawRoute = function(ctx) {
     box.x.max = to_x;
     box.y.max = to_y;
 
+    ctx.lineWidth = this.options.lineWidth;
     ctx.strokeStyle = this.commit.graph.get_color(this.branch);
     ctx.beginPath();
     ctx.moveTo(from_x, from_y);
@@ -38,6 +39,13 @@ Route.prototype.drawRoute = function(ctx) {
         );
     }
     ctx.stroke();
+    if (this.options.debug) {
+        ctx.beginPath();
+        ctx.rect(box.x.min, box.y.min, box.x.max - box.x.min, box.y.max - box.y.min);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+    }
     return box;
 };
 
@@ -75,6 +83,19 @@ Commit.prototype.drawDot = function(ctx) {
     box.x.max = this.pos.x + (this.options.dotRadius * 2);
     box.y.max = this.pos.y + (this.options.dotRadius * 2);
     ctx.fill();
+
+    if (this.options.debug) {
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.rect(box.x.min - this.options.dotRadius, 
+                box.y.min - this.options.dotRadius, 
+                box.x.max - box.x.min, 
+                box.y.max - box.y.min);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+    }
+
     return box;
 };
 
@@ -117,6 +138,19 @@ Commit.prototype.drawLabel = function(ctx) {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(labelText, labelX + (padding / 2), labelY + (padding / 2) + (textHeight / 2));
+
+    if (this.options.debug) {
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.rect(box.x.min, 
+                box.y.min, 
+                box.x.max - box.x.min, 
+                box.y.max - box.y.min);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+    }
+
     return box;
 };
 
@@ -232,7 +266,7 @@ GraphCanvas.prototype.checkBox = function(box) {
 
 // -- Graph Plugin ------------------------------------------------------------
 
-function Graph( element, options ) {
+function Graph(element, options) {
 	var self = this,
     defaults = {
         height: 800,
@@ -243,11 +277,13 @@ function Graph( element, options ) {
         dotRadius: 3,
         lineWidth: 2,
         data: [],
+        debug: false,
         finished: function(graph) { }
     };
 	self.element    = element;
 	self.$container = $( element );
-	self.options = $.extend( {}, defaults, options ) ;
+	self.options = $.extend({}, defaults, options);
+    self.scaleFactor = backingScale();
     self.data = self.options.data;
 	self._defaults = defaults;
 	self.applyTemplate();
