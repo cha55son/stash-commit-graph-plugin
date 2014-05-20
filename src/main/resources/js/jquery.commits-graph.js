@@ -1,5 +1,4 @@
-;(function($, window, undefined) {
-var newBox = function() { return { x: { min: Infinity, max: 0 }, y: { min: Infinity, max: 0 } } };
+;(function($, window, Raphael) {
 // -- Route --------------------------------------------------------
 
 function Route(commit, data, options) {
@@ -14,10 +13,10 @@ function Route(commit, data, options) {
 Route.prototype.drawRoute = function(ctx) {
     var box = newBox();
     var topOffset = 10 * this.options.scaleFactor;
-    var from_x = this.options.width - this.from * this.options.x_step - this.options.dotRadius;
-    var from_y = topOffset + this.commit.idx * this.options.y_step + this.options.dotRadius;
-    var to_x = this.options.width - this.to * this.options.x_step - this.options.dotRadius;
-    var to_y = topOffset + (this.commit.idx + 1) * this.options.y_step + this.options.dotRadius;
+    var from_x = this.options.width - this.from * this.options.xStep - this.options.dotRadius;
+    var from_y = topOffset + this.commit.idx * this.options.yStep + this.options.dotRadius;
+    var to_x = this.options.width - this.to * this.options.xStep - this.options.dotRadius;
+    var to_y = topOffset + (this.commit.idx + 1) * this.options.yStep + this.options.dotRadius;
     box.x.min = from_x;
     box.y.min = from_y;
     box.x.max = to_x;
@@ -31,10 +30,10 @@ Route.prototype.drawRoute = function(ctx) {
         ctx.lineTo(to_x, to_y);
     } else {
         ctx.bezierCurveTo(
-            from_x - this.options.x_step / 4,
-            from_y + this.options.y_step / 3 * 2,
-            to_x + this.options.x_step / 4,
-            to_y - this.options.y_step / 3 * 2,
+            from_x - this.options.xStep / 4,
+            from_y + this.options.yStep / 3 * 2,
+            to_x + this.options.xStep / 4,
+            to_y - this.options.yStep / 3 * 2,
             to_x, to_y
         );
     }
@@ -63,8 +62,8 @@ function Commit(graph, idx, data, options) {
 
     // Get the dot coords
     this.pos = { };
-    this.pos.x = this.options.width - this.dot_offset * this.options.x_step - this.options.dotRadius;
-    this.pos.y = (10 * this.options.scaleFactor) + this.idx * this.options.y_step + this.options.dotRadius;
+    this.pos.x = this.options.width - this.dot_offset * this.options.xStep - this.options.dotRadius;
+    this.pos.y = (10 * this.options.scaleFactor) + this.idx * this.options.yStep + this.options.dotRadius;
 
     var self = this;
     this.routes = $.map(data[2], function(e) { 
@@ -175,19 +174,12 @@ function GraphCanvas( data, options ) {
   self.canvas.width = options.width;
 
   var scaleFactor = backingScale();
-  if (self.options.orientation === "horizontal") {
-	if (scaleFactor < 1) {
-	  self.canvas.width = self.canvas.width * scaleFactor;
-	  self.canvas.height = self.canvas.height * scaleFactor;
-	}
-  } else {
-	if (scaleFactor > 1) {
-	  self.canvas.width = self.canvas.width * scaleFactor;
-	  self.canvas.height = self.canvas.height * scaleFactor;
-	}
+  if (scaleFactor > 1) {
+      self.canvas.width = self.canvas.width * scaleFactor;
+      self.canvas.height = self.canvas.height * scaleFactor;
   }
-  self.options.y_step = options.y_step * scaleFactor;
-  self.options.x_step = options.x_step * scaleFactor;
+  self.options.yStep = options.yStep * scaleFactor;
+  self.options.xStep = options.xStep * scaleFactor;
   self.options.dotRadius = options.dotRadius * scaleFactor;
   self.options.lineWidth = options.lineWidth * scaleFactor;
   self.options.width = options.width * scaleFactor;
@@ -197,27 +189,6 @@ function GraphCanvas( data, options ) {
 
   // or use context.scale(2,2) // not tested
 
-  self.colors = [
-    "#e11d21",
-    "#fbca04",
-    "#009800",
-    "#006b75",
-    "#207de5",
-    "#0052cc",
-    "#5319e7",
-    "#f7c6c7",
-    "#fad8c7",
-    "#fef2c0",
-    "#bfe5bf",
-    "#c7def8",
-    "#bfdadc",
-    "#bfd4f2",
-    "#d4c5f9",
-    "#cccccc",
-    "#84b6eb",
-    "#e6e6e6",
-    "#cc317c"
-  ];
   self.boundingBox = newBox();
 }
 
@@ -232,8 +203,6 @@ GraphCanvas.prototype.toHTML = function () {
 GraphCanvas.prototype.get_color = function(branch) {
   var self = this;
 
-  var n = self.colors.length;
-  return self.colors[branch % n];
 };
 
 GraphCanvas.prototype.draw = function() {
@@ -253,58 +222,72 @@ GraphCanvas.prototype.draw = function() {
     }
 };
 
-GraphCanvas.prototype.checkBox = function(box) {
-    if (box.x.min < this.boundingBox.x.min)
-        this.boundingBox.x.min = box.x.min;
-    if (box.y.min < this.boundingBox.y.min)
-        this.boundingBox.y.min = box.y.min;
-    if (box.x.max > this.boundingBox.x.max)
-        this.boundingBox.x.max = box.x.max;
-    if (box.y.max > this.boundingBox.y.max)
-        this.boundingBox.y.max = box.y.max;
-};
-
 // -- Graph Plugin ------------------------------------------------------------
 
-function Graph(element, options) {
-	var self = this,
-    defaults = {
-        height: 800,
-        width: 200,
-        y_step: 20,
-        x_step: 15,
-        orientation: "vertical",
-        dotRadius: 3,
-        lineWidth: 2,
-        data: [],
-        debug: false,
-        finished: function(graph) { }
+    function Graph(element, options) {
+        var defaults = {
+            padding: 0,
+            height: 800,
+            width: 200,
+            yStep: 20,
+            xStep: 15,
+            dotRadius: 3,
+            lineWidth: 2,
+            data: [],
+            debug: false
+        };
+        this.$el = $(element);
+        this.options = $.extend({}, defaults, options);
+        this.data = this.options.data;
+        this.buildGraph();
+    }
+
+    Graph.prototype.buildGraph = function() {
+        var self = this;
+        this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
+
+        var y = this.options.dotRadius + this.options.padding;
+        var x = this.options.width - this.options.dotRadius - this.options.padding;
+
+        $.each(this.data, function(i, point) {
+            // Draw the dot
+            self.paper.circle(x, y, self.options.dotRadius)
+                      .attr({ fill: self.getColor(point[1][1]), 'stroke-width': 0 });
+
+            // Draw the routes
+            $.each(point[2], function(j, route) {
+                var str = 'Q' + self.getXStep(route[0]) + ' ' + y + ' ' + self.getXStep(route[1]) + ' ' + self.getYStep(y + 1);
+                self.paper.path(str)
+                          .attr({ fill: self.getColor(route[2]), 'stroke-width': self.options.lineWidth });
+            });
+
+            // Draw the labels
+            y += self.options.yStep;
+        });
     };
-	self.element    = element;
-	self.$container = $( element );
-	self.options = $.extend({}, defaults, options);
-    self.scaleFactor = backingScale();
-    self.data = self.options.data;
-	self._defaults = defaults;
-	self.applyTemplate();
-    self.options.finished(this);
-}
 
-// Apply results to HTML template
-Graph.prototype.applyTemplate = function() {
-	var self = this,
-        graphCanvas = new GraphCanvas(self.data, self.options),
-        $canvas = graphCanvas.toHTML();
-	$canvas.appendTo(self.$container);
-    this.boundingBox = graphCanvas.boundingBox;
-};
+    Graph.prototype.getYStep = function(level) {
+        return this.options.yStep * level;
+    };
 
-// -- Attach plugin to jQuery's prototype --------------------------------------
+    Graph.prototype.getXStep = function(branch) {
+        return this.options.xStep * branch;
+    };
 
-	$.fn.commits = function ( options ) {
-		return this.each(function () {
-            new Graph( this, options );
-		});
-	};
+    Graph.prototype.getColor = function(branch) {
+        return this.colors[branch % this.colors.length];
+    };
 
-}( window.jQuery, window ) );
+    Graph.prototype.colors = [
+        "#e11d21", "#fbca04", "#009800", "#006b75", "#207de5",
+        "#0052cc", "#5319e7", "#f7c6c7", "#fad8c7", "#fef2c0",
+        "#bfe5bf", "#c7def8", "#bfdadc", "#bfd4f2", "#d4c5f9",
+        "#cccccc", "#84b6eb", "#e6e6e6", "#cc317c"
+    ];
+
+    $.fn.commits = function(options) {
+        return this.each(function() {
+            new Graph(this, options);
+        });
+    };
+})(window.jQuery, window, Raphael);

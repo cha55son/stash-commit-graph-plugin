@@ -171,26 +171,28 @@
         var $parent = this.els.$graphBox.parent();
         var width = 1000;
         var dotRadius = 4;
-        var graphHeight = this.commits().length * cellHeight - (cellHeight / 2) + (cellHeight / 2);
+        var graphHeight = this.commits().length * cellHeight;
         this.els.$graphBox.commits({
             width: width,
             height: graphHeight,
             orientation: 'vertical',
             data: nodes,
-            y_step: cellHeight,
+            padding: (cellHeight / 2) - dotRadius,
+            yStep: cellHeight,
             dotRadius: dotRadius,
             lineWidth: 2,
-            finished: function(graph) {
-                var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
-                width = Math.min(graphWidth + 5, $parent.width() * 0.5);
-                self.els.$graphBox.css({
-                    paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
-                    width: width,
-                    height: graphHeight
-                });
-                $('.commit-container').css('padding-left', width);
-            }
-        });
+            // finished: function(graph) {
+            //     var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
+            //     width = Math.min(graphWidth + 5, $parent.width() * 0.5);
+            //     self.els.$graphBox.css({
+            //         paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
+            //         width: width,
+            //         height: graphHeight
+            //     });
+            //     $('.commit-container').css('padding-left', width);
+            // }
+        }).css('width', '50%');
+        $('.commit-container').css('padding-left', '50%');
     };
 
     var CommitVM = function(data) {
