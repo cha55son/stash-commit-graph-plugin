@@ -38,20 +38,26 @@
             self.branches(branchData[0].values);
             self.tags(tagData[0].values);
 
-            var commits = masterCommitData[0].values;
+            var masterCommits = masterCommitData[0].values;
+            var finalBranchCommits = [];
             self.getBranchCommits().then(function(branchCommits) {
-                // Remove duplicate commits
-                $.each(commits, function(i, masterCommit) {
-                    // Start at the end so we don't mess up the iterator
-                    for (var j = branchCommits.length - 1; j >= 0; j--)
-                        if (branchCommits[j].id === masterCommit.id)
-                            branchCommits.splice(j, 1);
+                // Remove duplicate commits issue/#11
+                $.each(branchCommits, function(i, branchCommit) {
+                    var isDup = false;
+                    $.each(masterCommits.concat(finalBranchCommits), function(j, finalCommit) {
+                        if (branchCommit.id === finalCommit.id) {
+                            isDup = true;
+                            return false;
+                        }
+                    });
+                    if (!isDup)
+                        finalBranchCommits.push(branchCommit);
                 });
                 // Merge branch commits into the mainline by timestamp
-                $.each(branchCommits, function(i, branchCommit) {
-                    $.each(commits, function(j, masterCommit) {
+                $.each(finalBranchCommits, function(i, branchCommit) {
+                    $.each(masterCommits, function(j, masterCommit) {
                         if (branchCommit.authorTimestamp < masterCommit.authorTimestamp) return; 
-                        commits.splice(j, 0, branchCommit);
+                        masterCommits.splice(j, 0, branchCommit);
                         return false;
                     });
                 });
@@ -59,7 +65,7 @@
                     self.buildGraph();
                 }, 200);
                 $(window).resize(debounceFn);
-                self.commits($.map(commits, function(commit) {
+                self.commits($.map(masterCommits, function(commit) {
                     return new CommitVM(commit);
                 }));
                 self.isLoading(false);
