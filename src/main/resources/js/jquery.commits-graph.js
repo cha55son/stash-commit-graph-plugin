@@ -246,32 +246,50 @@ GraphCanvas.prototype.draw = function() {
         var self = this;
         this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
 
-        var y = this.options.dotRadius + this.options.padding;
-        var x = this.options.width - this.options.dotRadius - this.options.padding;
-
         $.each(this.data, function(i, point) {
+            // Draw the routes
+            self.drawRoutes(point, i);
+
             // Draw the dot
-            self.paper.circle(x, y, self.options.dotRadius)
+            self.paper.circle(self.getXPos(point[1][0]), self.getYPos(i), self.options.dotRadius)
                       .attr({ fill: self.getColor(point[1][1]), 'stroke-width': 0 });
 
-            // Draw the routes
-            $.each(point[2], function(j, route) {
-                var str = 'Q' + self.getXStep(route[0]) + ' ' + y + ' ' + self.getXStep(route[1]) + ' ' + self.getYStep(y + 1);
-                self.paper.path(str)
-                          .attr({ fill: self.getColor(route[2]), 'stroke-width': self.options.lineWidth });
-            });
-
-            // Draw the labels
-            y += self.options.yStep;
         });
     };
 
-    Graph.prototype.getYStep = function(level) {
-        return this.options.yStep * level;
+    Graph.prototype.drawRoutes = function(point, yStep) {
+        // Loop over the routes in reverse so the lines lay on top
+        // of each other properly.
+        for (var i = point[2].length - 1; i >= 0; i--) {
+            var route = point[2][i];
+            var quarterXStep = this.options.xStep / 4;
+            var twoThirdYStep = this.options.yStep / 3 * 2;
+            var fromX = this.getXPos(route[0]);
+            var toX = this.getXPos(route[1]);
+            var fromY = this.getYPos(yStep);
+            var toY = this.getYPos(yStep + 1);
+            var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
+            var moveArr = ['M', fromX, fromY];
+            
+            if (fromX === toX)
+                return this.paper.path(moveArr.concat([
+                    'L', toX, toY
+                ])).attr(pathOptions);
+
+            this.paper.path(moveArr.concat([
+                'C', fromX - quarterXStep, fromY + twoThirdYStep, 
+                     toX + quarterXStep, toY - twoThirdYStep,
+                     toX, toY
+            ])).attr(pathOptions);
+        }
     };
 
-    Graph.prototype.getXStep = function(branch) {
-        return this.options.xStep * branch;
+    Graph.prototype.getYPos = function(level) {
+        return (this.options.yStep * level) + this.options.padding + this.options.dotRadius;
+    };
+
+    Graph.prototype.getXPos = function(branch) {
+        return this.options.width - (this.options.xStep * branch) - this.options.padding - this.options.dotRadius;
     };
 
     Graph.prototype.getColor = function(branch) {
