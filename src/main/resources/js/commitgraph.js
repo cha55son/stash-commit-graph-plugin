@@ -180,16 +180,17 @@
             yStep: cellHeight,
             dotRadius: dotRadius,
             lineWidth: 2,
-            // finished: function(graph) {
-            //     var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
-            //     width = Math.min(graphWidth + 5, $parent.width() * 0.5);
-            //     self.els.$graphBox.css({
-            //         paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
-            //         width: width,
-            //         height: graphHeight
-            //     });
-            //     $('.commit-container').css('padding-left', width);
-            // }
+            finished: function(graph) {
+                width = graph.paper.getBBox();
+                // var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
+                // width = Math.min(graphWidth + 5, $parent.width() * 0.5);
+                // self.els.$graphBox.css({
+                //     paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
+                //     width: width,
+                //     height: graphHeight
+                // });
+                // $('.commit-container').css('padding-left', width);
+            }
         }).css('width', '50%');
         $('.commit-container').css('padding-left', '50%');
     };

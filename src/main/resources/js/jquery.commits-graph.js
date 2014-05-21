@@ -234,30 +234,35 @@ GraphCanvas.prototype.draw = function() {
             dotRadius: 3,
             lineWidth: 2,
             data: [],
-            debug: false
+            debug: false,
+            finished: function(graph) { }
         };
         this.$el = $(element);
         this.options = $.extend({}, defaults, options);
         this.data = this.options.data;
         this.buildGraph();
+        this.options.finished(this);
     }
 
     Graph.prototype.buildGraph = function() {
         var self = this;
         this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
-        window.paper = this.paper;
+        this.objects = this.paper.set();
 
         $.each(this.data, function(i, point) {
-            // Draw the routes
-            self.drawRoutes(point, i);
+            this.objects.push(self.drawRoutes(point, i));
+            this.objects.push(self.drawDot(point, i));
+            this.objects.push(self.drawLabels(point, point[1][0], i));
+        });
+    };
 
-            // Draw the dot
-            self.paper.circle(self.getXPos(point[1][0]), self.getYPos(i), self.options.dotRadius)
-                      .attr({ fill: self.getColor(point[1][1]), 'stroke-width': 0 });
-
-            // Draw Labels
-            self.drawLabels(point, point[1][0], i);
-
+    Graph.prototype.drawDot = function(point, yStep) {
+        var dot = this.paper.circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
+                            .attr({ fill: this.getColor(point[1][1]), 'stroke-width': 0 });
+        dot.hover(function() {
+            dot.animate({ transform: 'S 1.5 1.5' }, 50);           
+        }, function() {
+            dot.animate({ transform: 'S 1 1' }, 50);           
         });
     };
 
@@ -282,7 +287,7 @@ GraphCanvas.prototype.draw = function() {
                              .attr({ 
                                  fill: '#FFF', 
                                  'stroke-width': 0,
-                                 'font-size': '12px',
+                                 'font-size': '11px',
                                  'font-weight': 'lighter',
                                  'font-family': 'monospace',
                                  'text-anchor': 'end', 
@@ -291,12 +296,13 @@ GraphCanvas.prototype.draw = function() {
         var textBox = text.getBBox();
         // Black rectangle for text
         var textPadding = 3;
-        var box = this.paper.rect(xPos - semiTriSize - textBox.width - textPadding * 2, 
+        var LRPadding = 3;
+        var box = this.paper.rect(xPos - semiTriSize - textBox.width - textPadding * 2 - LRPadding * 2, 
                                   yPos - (textBox.height / 2) - textPadding, 
-                                  textBox.width + textPadding * 2, 
-                                  textBox.height + textPadding * 2, 2).attr({ fill: color, 'stroke-width': 0 });
+                                  textBox.width + textPadding * 2 + LRPadding * 2, 
+                                  textBox.height + textPadding * 2).attr({ fill: color, 'stroke-width': 0 });
         // Move the text back into place
-        text.attr({ x: box.getBBox().x + textPadding, y: box.getBBox().y + (box.getBBox().height / 2) }).toFront();
+        text.attr({ x: box.getBBox().x + textPadding + LRPadding, y: box.getBBox().y + (box.getBBox().height / 2) }).toFront();
     };
 
     Graph.prototype.drawRoutes = function(point, yStep) {
