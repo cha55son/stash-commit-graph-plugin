@@ -245,6 +245,7 @@ GraphCanvas.prototype.draw = function() {
     Graph.prototype.buildGraph = function() {
         var self = this;
         this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
+        window.paper = this.paper;
 
         $.each(this.data, function(i, point) {
             // Draw the routes
@@ -254,33 +255,76 @@ GraphCanvas.prototype.draw = function() {
             self.paper.circle(self.getXPos(point[1][0]), self.getYPos(i), self.options.dotRadius)
                       .attr({ fill: self.getColor(point[1][1]), 'stroke-width': 0 });
 
+            // Draw Labels
+            self.drawLabels(point, point[1][0], i);
+
         });
     };
 
+    Graph.prototype.drawLabels = function(point, xStep, yStep) {
+        if (point[3].length === 0) return;
+        var triSize = 10;
+        var semiTriSize = triSize / 3 * 2;
+        var commitPadding = 5;
+        var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
+        var yPos = this.getYPos(yStep);
+        var color = 'rgba(51, 51, 51, 80)';
+        // Small triangle
+        this.paper.path([
+            'M', xPos - semiTriSize, yPos - (triSize / 2),
+            'L', xPos, yPos,
+            'L', xPos - semiTriSize, yPos + (triSize / 2),
+            'L', xPos - semiTriSize, yPos - triSize
+        ]).attr({ fill: color, 'stroke-width': 0 });
+        // Add text
+        // Draw the text off screen to get the width
+        var text = this.paper.text(-100, -100, point[3].join(', '))
+                             .attr({ 
+                                 fill: '#FFF', 
+                                 'stroke-width': 0,
+                                 'font-size': '12px',
+                                 'font-weight': 'lighter',
+                                 'font-family': 'monospace',
+                                 'text-anchor': 'end', 
+                                 'alignment-baseline': 'baseline' 
+                             });
+        var textBox = text.getBBox();
+        // Black rectangle for text
+        var textPadding = 3;
+        var box = this.paper.rect(xPos - semiTriSize - textBox.width - textPadding * 2, 
+                                  yPos - (textBox.height / 2) - textPadding, 
+                                  textBox.width + textPadding * 2, 
+                                  textBox.height + textPadding * 2, 2).attr({ fill: color, 'stroke-width': 0 });
+        // Move the text back into place
+        text.attr({ x: box.getBBox().x + textPadding, y: box.getBBox().y + (box.getBBox().height / 2) }).toFront();
+    };
+
     Graph.prototype.drawRoutes = function(point, yStep) {
-        // Loop over the routes in reverse so the lines lay on top
-        // of each other properly.
+        // Loop over the routes in reverse so the
+        // lines lay on top of each other properly.
+        var quarterXStep = this.options.xStep / 4;
+        var twoThirdYStep = this.options.yStep / 3 * 2;
+        var fromY = this.getYPos(yStep);
+        var toY = this.getYPos(yStep + 1);
+
         for (var i = point[2].length - 1; i >= 0; i--) {
             var route = point[2][i];
-            var quarterXStep = this.options.xStep / 4;
-            var twoThirdYStep = this.options.yStep / 3 * 2;
             var fromX = this.getXPos(route[0]);
             var toX = this.getXPos(route[1]);
-            var fromY = this.getYPos(yStep);
-            var toY = this.getYPos(yStep + 1);
             var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
             var moveArr = ['M', fromX, fromY];
             
-            if (fromX === toX)
-                return this.paper.path(moveArr.concat([
+            if (fromX === toX) {
+                this.paper.path(moveArr.concat([
                     'L', toX, toY
                 ])).attr(pathOptions);
-
-            this.paper.path(moveArr.concat([
-                'C', fromX - quarterXStep, fromY + twoThirdYStep, 
-                     toX + quarterXStep, toY - twoThirdYStep,
-                     toX, toY
-            ])).attr(pathOptions);
+            } else {
+                this.paper.path(moveArr.concat([
+                    'C', fromX - quarterXStep, fromY + twoThirdYStep, 
+                        toX + quarterXStep, toY - twoThirdYStep,
+                        toX, toY
+                ])).attr(pathOptions);
+            }
         }
     };
 

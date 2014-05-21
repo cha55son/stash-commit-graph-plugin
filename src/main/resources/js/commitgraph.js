@@ -128,9 +128,9 @@
             var offset = reserve.indexOf(branch);
             var routes = [];
 
-            if (parentCnt <= 1) {
+            if (parentCnt == 1) {
                 // Create branch
-                if (!isEmpty(commit.parents[0]) && !isEmpty(branches[commit.parents[0].id])) {
+                if (!isEmpty(branches[commit.parents[0].id])) {
                     for (var j = offset + 1; j < reserve.length; j++)
                         routes.push([j, j - 1, reserve[j]]);
                     for (var j = 0; j < offset; j++)
@@ -142,8 +142,7 @@
                     // Remove a branch if we have hit the root (first commit).
                     for (var j = 0; j < reserve.length; j++)
                         routes.push([j, j, reserve[j]]);
-                    if (!isEmpty(commit.parents[0]))
-                        branches[commit.parents[0].id] = branch;
+                    branches[commit.parents[0].id] = branch;
                 }
             // Merge branch
             } else if (parentCnt === 2) {
