@@ -53,15 +53,16 @@
                 for (var i = 0; i < branchSets.length; i++) {
                     var set = branchSets[i];
                     var firstCommit = set[set.length - 1];
+                    var parentCommit = firstCommit.parents[0];
                     if (!firstCommit) continue;
-                    // Find a commit that occurred before firstCommit
-                    // then insert all of the branch's commits.
+                    // Find the firstCommits parent then
+                    // insert all of the branch's commits.
                     var commitsLen = self.commits.length;
                     for (var j = 0; j < commitsLen; j++) {
                         var commit = self.commits[j];
-                        if (firstCommit.authorTimestamp < commit.authorTimestamp) continue;
-                        for (var k = 0; k < set.length; k++)
-                            self.commits.splice(j + k, 0, set[k]);
+                        if (parentCommit.id !== commit.id) continue;
+                        for (var k = set.length - 1; k >= 0; k--)
+                            self.commits.splice(j, 0, set[k]);
                         break;
                     }
                 }
