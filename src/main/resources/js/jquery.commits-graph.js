@@ -250,9 +250,10 @@ GraphCanvas.prototype.draw = function() {
         this.objects = this.paper.set();
 
         $.each(this.data, function(i, point) {
-            this.objects.push(self.drawRoutes(point, i));
-            this.objects.push(self.drawDot(point, i));
-            this.objects.push(self.drawLabels(point, point[1][0], i));
+            var routes = self.drawRoutes(point, i);
+            $.each(routes, function(i, route) { self.objects.push(route); });
+            self.objects.push(self.drawDot(point, i));
+            self.objects.push(self.drawLabels(point, point[1][0], i));
         });
     };
 
@@ -264,6 +265,7 @@ GraphCanvas.prototype.draw = function() {
         }, function() {
             dot.animate({ transform: 'S 1 1' }, 50);           
         });
+        return dot;
     };
 
     Graph.prototype.drawLabels = function(point, xStep, yStep) {
@@ -274,13 +276,14 @@ GraphCanvas.prototype.draw = function() {
         var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
         var yPos = this.getYPos(yStep);
         var color = 'rgba(51, 51, 51, 80)';
+        var label = this.paper.set();
         // Small triangle
-        this.paper.path([
+        label.push(this.paper.path([
             'M', xPos - semiTriSize, yPos - (triSize / 2),
             'L', xPos, yPos,
             'L', xPos - semiTriSize, yPos + (triSize / 2),
             'L', xPos - semiTriSize, yPos - triSize
-        ]).attr({ fill: color, 'stroke-width': 0 });
+        ]).attr({ fill: color, 'stroke-width': 0 }));
         // Add text
         // Draw the text off screen to get the width
         var text = this.paper.text(-100, -100, point[3].join(', '))
@@ -293,6 +296,7 @@ GraphCanvas.prototype.draw = function() {
                                  'text-anchor': 'end', 
                                  'alignment-baseline': 'baseline' 
                              });
+        label.push(text);
         var textBox = text.getBBox();
         // Black rectangle for text
         var textPadding = 3;
@@ -302,7 +306,9 @@ GraphCanvas.prototype.draw = function() {
                                   textBox.width + textPadding * 2 + LRPadding * 2, 
                                   textBox.height + textPadding * 2).attr({ fill: color, 'stroke-width': 0 });
         // Move the text back into place
+        label.push(box);
         text.attr({ x: box.getBBox().x + textPadding + LRPadding, y: box.getBBox().y + (box.getBBox().height / 2) }).toFront();
+        return label;
     };
 
     Graph.prototype.drawRoutes = function(point, yStep) {
@@ -312,6 +318,7 @@ GraphCanvas.prototype.draw = function() {
         var twoThirdYStep = this.options.yStep / 3 * 2;
         var fromY = this.getYPos(yStep);
         var toY = this.getYPos(yStep + 1);
+        var routes = [];
 
         for (var i = point[2].length - 1; i >= 0; i--) {
             var route = point[2][i];
@@ -320,18 +327,21 @@ GraphCanvas.prototype.draw = function() {
             var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
             var moveArr = ['M', fromX, fromY];
             
+            var path = null;
             if (fromX === toX) {
-                this.paper.path(moveArr.concat([
+                path = this.paper.path(moveArr.concat([
                     'L', toX, toY
                 ])).attr(pathOptions);
             } else {
-                this.paper.path(moveArr.concat([
+                path = this.paper.path(moveArr.concat([
                     'C', fromX - quarterXStep, fromY + twoThirdYStep, 
                         toX + quarterXStep, toY - twoThirdYStep,
                         toX, toY
                 ])).attr(pathOptions);
             }
+            routes.push(path);
         }
+        return routes;
     };
 
     Graph.prototype.getYPos = function(level) {

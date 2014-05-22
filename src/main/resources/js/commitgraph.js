@@ -181,7 +181,12 @@
             dotRadius: dotRadius,
             lineWidth: 2,
             finished: function(graph) {
-                width = graph.paper.getBBox();
+                var box = graph.objects.getBBox();
+                width = Math.min(box.width + 10, $parent.width() * 0.5);
+                self.els.$graphBox.width(width);
+                if (box.width > width)
+                    self.els.$graphBox.css('overflow-x', 'scroll');
+                $('.commit-container').css('padding-left', width);
                 // var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
                 // width = Math.min(graphWidth + 5, $parent.width() * 0.5);
                 // self.els.$graphBox.css({
@@ -191,8 +196,7 @@
                 // });
                 // $('.commit-container').css('padding-left', width);
             }
-        }).css('width', '50%');
-        $('.commit-container').css('padding-left', '50%');
+        });
     };
 
     var CommitVM = function(data) {

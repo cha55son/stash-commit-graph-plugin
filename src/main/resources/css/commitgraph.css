@@ -28,13 +28,8 @@
     top: 0;
     left: 0;
     max-width: 50%;
-    overflow: auto;
+    overflow: hidden;
     padding-top: 30px;
-}
-
-#commit-graph svg {
-    margin-right: 10px;
-    background-color: #EEE;
 }
 
 .commit-container {
