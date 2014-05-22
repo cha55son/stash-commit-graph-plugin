@@ -35,7 +35,7 @@
                     </tr>
                 </thead>
                 {literal}
-                <tbody data-bind="foreach: commits">
+                <tbody data-bind="foreach: displayCommits">
                     <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
                         <td data-bind="text: author.name"></td>
                         <td>
