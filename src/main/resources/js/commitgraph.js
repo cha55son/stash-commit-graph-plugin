@@ -53,8 +53,8 @@
                 for (var i = 0; i < branchSets.length; i++) {
                     var set = branchSets[i];
                     var firstCommit = set[set.length - 1];
-                    var parentCommit = firstCommit.parents[0];
                     if (!firstCommit) continue;
+                    var parentCommit = firstCommit.parents[0];
                     // Find the firstCommits parent then
                     // insert all of the branch's commits.
                     var commitsLen = self.commits.length;
@@ -115,8 +115,14 @@
         return set;
     };
     CommitGraphVM.prototype.shortenName = function(name) {
-        if (name.length <= 25) return name;
-        return name.slice(0, 11) + '..' + name.slice(-11);
+        var len = 24;
+        if (name.length <= len) return name;
+        var repl = name.replace(/^(\w*)\/(.*)/, function(match, branchType, theRest) {
+            return branchType[0] + '/' + theRest;
+        });
+        if (repl.length > len)
+            return repl.slice(0, 22) + '..';
+        return repl;
     };
     CommitGraphVM.prototype.buildGraph = function() {
         /*
@@ -213,14 +219,6 @@
                 if (box.width > width)
                     self.els.$graphBox.css('overflow-x', 'scroll');
                 $('.commit-container').css('padding-left', width);
-                // var graphWidth = (graph.boundingBox.x.max - graph.boundingBox.x.min) / graph.scaleFactor;
-                // width = Math.min(graphWidth + 5, $parent.width() * 0.5);
-                // self.els.$graphBox.css({
-                //     paddingTop: cellHeight + (cellHeight / 2) - (dotRadius / 2) - 10,
-                //     width: width,
-                //     height: graphHeight
-                // });
-                // $('.commit-container').css('padding-left', width);
             }
         });
     };
