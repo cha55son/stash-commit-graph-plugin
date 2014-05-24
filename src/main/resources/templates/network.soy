@@ -28,8 +28,6 @@
             <table class="aui paged-table commits-table" id="commit-graph-table" data-start="0">
                 <thead>
                     <tr>
-                        <th>Author</th>
-                        <th>Commit</th>
                         <th>Message</th>
                         <th class="commit-date">Commit Date</th>
                     </tr>
@@ -37,14 +35,10 @@
                 {literal}
                 <tbody data-bind="foreach: displayCommits">
                     <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
-                        <td data-bind="text: author.name"></td>
-                        <td>
-                            <a class="changesetid" data-bind="text: displayId, attr: { href: commitURL }"></a>
-                            <!-- ko if: isMerge -->
-                                <span class="aui-lozenge merge-lozenge abbreviated" title="This commit is a merge.">M</span>
-                            <!-- /ko -->
+                        <td class="commit-message">
+                            <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
+                            <a data-bind="text: message, attr: { href: commitURL }" target="_blank"></a>
                         </td>
-                        <td class="commit-message" data-bind="text: message"></td>
                         <td class="commit-date" data-bind="text: date.toDateString()"></td>
                     </tr>
                 </tbody>

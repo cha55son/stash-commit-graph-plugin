@@ -1,7 +1,17 @@
 (function($, ko, _) {
     var isEmpty = function(val) { return typeof val === 'undefined'; };
+    // Used to convert the author initals to a string for color selection.
+    String.prototype.hashCode = function() {
+        var hash = 0;
+        if (this.length == 0) return hash;
+        for (i = 0; i < this.length; i++) {
+            char = this.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    };
     // CommitGraph should be added by the template
-
     var CommitGraphVM = function() {
         this.els = { };
         this.els.$commitTable = $('#commit-graph-table');
@@ -9,10 +19,11 @@
         this.els.$graphBox = $('#commit-graph');
 
         this.urls = { };
-        this.urls.base = AJS.contextPath() + '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
-        this.urls.commits = this.urls.base + '/commits';
-        this.urls.branches = this.urls.base + '/branches';
-        this.urls.tags = this.urls.base + '/tags';
+        this.urls.base = AJS.contextPath() + '/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
+        this.urls.apiBase = AJS.contextPath() + '/rest/api/1.0/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug;
+        this.urls.commits = this.urls.apiBase + '/commits';
+        this.urls.branches = this.urls.apiBase + '/branches';
+        this.urls.tags = this.urls.apiBase + '/tags';
 
         this.isLoading = ko.observable(false);
         this.displayCommits = ko.observableArray();
@@ -25,7 +36,7 @@
         this.commitsHash = { };
 
         this.ajax = { };
-        this.ajax.limit = 400;
+        this.ajax.limit = 300;
 
         this.getData();
     };
@@ -71,7 +82,7 @@
                 }, 200);
                 $(window).resize(debounceFn);
                 self.displayCommits(self.commits.map(function(commit) {
-                    return new CommitVM(commit);
+                    return new CommitVM(commit, self);
                 }));
                 self.isLoading(false);
                 self.buildGraph();
@@ -117,12 +128,13 @@
     CommitGraphVM.prototype.shortenName = function(name) {
         var len = 24;
         if (name.length <= len) return name;
-        var repl = name.replace(/^(\w*)\/(.*)/, function(match, branchType, theRest) {
-            return branchType[0] + '/' + theRest;
-        });
-        if (repl.length > len)
-            return repl.slice(0, 22) + '..';
-        return repl;
+        return '..' + name.slice(-22);
+    };
+    CommitGraphVM.prototype.getCommitLink = function(commit) {
+        return this.urls.base + '/commits/' + commit.id;
+    };
+    CommitGraphVM.prototype.getBranchLink = function(branch) {
+        return this.urls.base + '/commits?until=' + encodeURI(branch.displayId);
     };
     CommitGraphVM.prototype.buildGraph = function() {
         /*
@@ -130,11 +142,13 @@
         * sha1 (string) The sha1 for the commit
         * dotData (array) [0]: Branch
         *                 [1]: Dot color
+        *                 [2]: commit link
         * routeData (array) May contain many different routes.
-        *                   [x][0]: From branch
-        *                   [x][1]: To branch
-        *                   [x][2]: Route color
+        *                 [x][0]: From branch
+        *                 [x][1]: To branch
+        *                 [x][2]: Route color
         * labelData (array) Tags to be added to the graph.
+        *                 [0]: { display: '...', href: '...' }
         */
         var self = this;
         var nodes = [];
@@ -187,14 +201,14 @@
             for (var j = 0; j < self.branches.length; j++) {
                 var branchObj = self.branches[j];
                 if (branchObj.latestChangeset === commit.id)
-                    labels.push(self.shortenName(branchObj.displayId));
+                    labels.push({ display: self.shortenName(branchObj.displayId), href: self.getBranchLink(branchObj) });
             }
             for (var j = 0; j < self.tags.length; j++) {
-                var tag = self.tags[j];
-                if (tag.latestChangeset === commit.id)
-                    labels.push(self.shortenName(tag.displayId));
+                var tagObj = self.tags[j];
+                if (tagObj.latestChangeset === commit.id)
+                    labels.push({ display: self.shortenName(tagObj.displayId), href: self.getBranchLink(tagObj) });
             }
-            nodes.push([commit.id, [offset, branch], routes, labels]);
+            nodes.push([commit.id, [offset, branch, self.getCommitLink(commit)], routes, labels]);
         }
 
         this.els.$graphBox.children().remove();
@@ -223,12 +237,31 @@
         });
     };
 
-    var CommitVM = function(data) {
+    var CommitVM = function(data, graph) {
         $.extend(this, data);
         this.isMerge = this.parents.length > 1;
         this.date = new Date(this.authorTimestamp);
-        this.commitURL = AJS.contextPath() + '/projects/' + CommitGraph.projectKey + '/repos/' + CommitGraph.repoSlug + '/commits/' + this.id;
+        this.commitURL = graph.getCommitLink(this);
     };
+
+    CommitVM.prototype.getAuthorInitials = function() {
+        var tokens = this.author.name.split(' ');
+        var initials = tokens.map(function(token) {
+            return token[0].toUpperCase();
+        }).join('');
+        return initials.slice(0, 2);
+    };
+
+    CommitVM.prototype.getAuthorColor = function() {
+        var initials = this.getAuthorInitials();
+        return this.authorColors[initials.hashCode() % this.authorColors.length];
+    };
+
+    CommitVM.prototype.authorColors = [
+        '#610B0B', '#61210B', '#61380B', '#5F4C0B', '#5E610B', '#4B610B', '#38610B', '#21610B', '#0B610B',
+        '#0B6121', '#0B6138', '#0B614B', '#0B615E', '#0B4C5F', '#0B3861', '#0B2161', '#0B0B61', '#210B61',
+        '#380B61', '#4C0B5F', '#610B5E', '#610B4B', '#610B38', '#610B21', '#2E2E2E'
+    ];
 
     $(document).ready(function() {
         if (!CommitGraph) return;

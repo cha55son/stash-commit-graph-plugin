@@ -16,6 +16,7 @@
 
 #commit-graph-table {
     font-size: 12px;
+    table-layout: fixed;
 }
 
 #commit-graph-table td, #commit-graph-table th {
@@ -39,18 +40,29 @@
 .commit-date {
     width: 100px;
     overflow: hidden;
+    vertical-align: bottom;
 }
 
 .changesetid {
     font-family: monospace;
 }
 
-.commit-message {
-    max-width: 400px;
+.commit-container .commits-table .commit-message {
     text-overflow: ellipsis;
     overflow: hidden;
     display: block;
     border-top: 0 !important;
+    color: #333 !important;
+    text-decoration: none !important;
+}
+
+.commiter-initials {
+    color: #FFF;
+    text-align: center;
+    width: 25px;
+    display: block;
+    float: left;
+    margin-right: 5px;
 }
 
 .commits-table tr.merge td {

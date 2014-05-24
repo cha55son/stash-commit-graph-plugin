@@ -28,23 +28,32 @@
             var routes = self.drawRoutes(point, i);
             $.each(routes, function(i, route) { self.objects.push(route); });
             self.objects.push(self.drawDot(point, i));
-            self.objects.push(self.drawLabels(point, point[1][0], i));
+            self.objects.push(self.drawLabels(point, i));
         });
     };
 
     Graph.prototype.drawDot = function(point, yStep) {
-        var dot = this.paper.circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
-                            .attr({ fill: this.getColor(point[1][1]), 'stroke-width': 0 });
+        var dot = this.paper
+            .circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
+            .attr({ 
+                fill: this.getColor(point[1][1]), 
+                'stroke-width': 0,
+                cursor: 'pointer'
+            });
         dot.hover(function() {
             dot.animate({ transform: 'S 1.5 1.5' }, 50);           
         }, function() {
             dot.animate({ transform: 'S 1 1' }, 50);           
         });
+        dot.click(function() {
+            window.open(point[1][2]);
+        });
         return dot;
     };
 
-    Graph.prototype.drawLabels = function(point, xStep, yStep) {
+    Graph.prototype.drawLabels = function(point, yStep) {
         if (point[3].length === 0) return;
+        var xStep = point[1][0];
         var triSize = 10;
         var semiTriSize = triSize / 3 * 2;
         var commitPadding = 5;
@@ -54,22 +63,22 @@
         var label = this.paper.set();
         // Small triangle
         var triXPos = xPos - semiTriSize;
-        label.push(this.paper.path([
+        var tri = this.paper.path([
             'M', triXPos, yPos - (triSize / 2),
             'L', xPos, yPos,
             'L', xPos - semiTriSize, yPos + (triSize / 2),
             'L', triXPos, yPos - triSize
-        ]).attr({ fill: color, stroke: 'none' }));
+        ]).attr({ fill: color, stroke: 'none' });
+        label.push(tri);
+        var labelText = '•••';
+        var singleBranch = point[3].length === 1;
+        if (singleBranch) labelText = point[3][0].display;
         // Draw the text off screen to get the width
         var text = this.paper
-            .text(0, 0, point[3].join(', '))
+            .text(0, 0, labelText)
             .attr({ 
                 fill: '#FFF', 
-                stroke: 'none',
-                'font-size': '11px',
-                'font-family': 'monospace',
-                'text-anchor': 'end', 
-                'alignment-baseline': 'baseline' 
+                font: '11px monospace'
             });
         var textBox = text.getBBox();
         var textPadding = 3;
@@ -83,10 +92,26 @@
         label.push(box);
         // Move the text back into place
         text.attr({ 
-            x: box.getBBox().x + textPadding + LRPadding, 
-            y: box.getBBox().y + (box.getBBox().height / 2) 
+            x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding, 
+            y: box.getBBox().y + box.getBBox().height / 2 
         }).toFront();
         label.push(text);
+        // Setup label event handlers
+        if (singleBranch) label.attr({ cursor: 'pointer' });
+        label.hover(function() {
+            var attrs = { fill: 'rgba(150, 150, 150, 80)' };
+            box.attr(attrs);
+            tri.attr(attrs);
+            if (singleBranch) text.attr({ fill: '#333' });
+        }, function() {
+            var attrs = { fill: color };
+            box.attr(attrs);
+            tri.attr(attrs);
+            if (singleBranch) text.attr({ fill: '#FFF' });
+        });
+        label.click(function() {
+            if (singleBranch) window.open(point[3][0].href);
+        });
         return label;
     };
 
