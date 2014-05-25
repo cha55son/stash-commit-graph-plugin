@@ -22,28 +22,31 @@
     <div class="commit-graph-loader" data-bind="visible: isLoading()">
         <img src="{plugin_resource('com.plugin.commitgraph.commitgraph:commitgraph-resources', 'images/ajax-loader.gif')}" />
     </div>
-    <div class="commit-container" data-bind="visible: !isLoading()">
-        <div id="commit-graph" dir="rtl"></div>
-        <div id="commit-graph-table-wrapper">
-            <table class="aui paged-table commits-table" id="commit-graph-table" data-start="0">
-                <thead>
-                    <tr>
-                        <th>Message</th>
-                        <th class="commit-date">Commit Date</th>
-                    </tr>
-                </thead>
-                {literal}
-                <tbody data-bind="foreach: displayCommits">
-                    <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
-                        <td class="commit-message">
-                            <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
-                            <a data-bind="text: message, attr: { href: commitURL }" target="_blank"></a>
-                        </td>
-                        <td class="commit-date" data-bind="text: date.toDateString()"></td>
-                    </tr>
-                </tbody>
-                {/literal}
-            </table>
+    <div class="commit-page-wrapper" data-bind="visible: !isLoading()">
+        <h2 class="page-panel-content-header">Network</h2>
+        <div class="commit-container">
+            <div id="commit-graph" dir="rtl"></div>
+            <div id="commit-graph-table-wrapper">
+                <table class="aui paged-table commits-table" id="commit-graph-table" data-start="0">
+                    <thead>
+                        <tr>
+                            <th>Message</th>
+                            <th class="commit-date">Commit Date</th>
+                        </tr>
+                    </thead>
+                    {literal}
+                    <tbody data-bind="foreach: displayCommits">
+                        <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
+                            <td class="commit-message">
+                                <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
+                                <a data-bind="text: message, attr: { href: commitURL }" target="_blank"></a>
+                            </td>
+                            <td class="commit-date" data-bind="text: date.toDateString()"></td>
+                        </tr>
+                    </tbody>
+                    {/literal}
+                </table>
+            </div>
         </div>
     </div>
 </body>
