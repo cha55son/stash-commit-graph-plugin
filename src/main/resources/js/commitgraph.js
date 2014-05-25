@@ -212,7 +212,8 @@
         }
 
         this.els.$graphBox.children().remove();
-        var cellHeight = $('.commit-row', this.els.$commitList).outerHeight(true);
+        var cells = $('.commit-row', this.els.$commitList);
+        var cellHeight = this.els.$commitList.outerHeight(true) / cells.length;
         var $parent = this.els.$graphBox.parent();
         var width = 1000;
         var dotRadius = 4;
