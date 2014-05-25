@@ -60,20 +60,13 @@
             for (var i = 0; i < len; i++)
                 self.commitsHash[self.commits[i].id] = self.commits[i];
 
-            self.getBranchSets().then(function(branchSets) {
-                for (var i = 0; i < branchSets.length; i++) {
-                    var set = branchSets[i];
-                    var firstCommit = set[set.length - 1];
-                    if (!firstCommit) continue;
-                    var parentCommit = firstCommit.parents[0];
-                    // Find the firstCommits parent then
-                    // insert all of the branch's commits.
-                    var commitsLen = self.commits.length;
-                    for (var j = 0; j < commitsLen; j++) {
-                        var commit = self.commits[j];
-                        if (parentCommit.id !== commit.id) continue;
-                        for (var k = set.length - 1; k >= 0; k--)
-                            self.commits.splice(j, 0, set[k]);
+            self.getBranchCommits().then(function(branchCommits) {
+                for (var i = 0; i < branchCommits.length; i++) {
+                    var branchCommit = branchCommits[i];
+                    for (var j = 0; j < self.commits.length; j++) {
+                        var masterCommit = self.commits[j];
+                        if (branchCommit.authorTimestamp < masterCommit.authorTimestamp) continue;
+                        self.commits.splice(j, 0, branchCommit);
                         break;
                     }
                 }
@@ -89,29 +82,32 @@
             });
         });
     };
-    CommitGraphVM.prototype.getBranchSets = function() {
+    CommitGraphVM.prototype.getBranchCommits = function() {
         var self = this;
         var deferred = $.Deferred();
-        var branchSets = [];
+        var branchCommits = [];
         var ajaxCnt = this.branches.length - 1;
         for (var i = 0; i < this.branches.length; i++) {
             var branch = this.branches[i];
             if (branch.displayId === 'master') {
-                ajaxCnt--;
-                continue;
+                ajaxCnt--; continue;
             }
             $.ajax({
                 url: this.urls.commits,
                 data: { until: branch.id, limit: this.ajax.limit },
                 success: function(commitData, status) {
-                    branchSets.push(self.removeDups(commitData.values));
+                    var dupsRemoved = self.removeDups(commitData.values);
+                    for (var i = 0; i < dupsRemoved.length; i++)
+                        branchCommits.push(dupsRemoved[i]);
                 },
                 complete: function() {
                     if (ajaxCnt-- === 0) 
-                        deferred.resolve(branchSets);
+                        deferred.resolve(branchCommits);
                 }
             });
         }
+        if (ajaxCnt <= 0)
+            deferred.resolve(branchCommits);
         return deferred.promise();
     };
     CommitGraphVM.prototype.removeDups = function(commits) {
