@@ -158,17 +158,18 @@
 
         // Setup label event handlers
         label.hoverset(this.paper, function() {
-            var attrs = { fill: 'rgba(150, 150, 150, 80)' };
+            label.toFront();
+            var attrs = { fill: 'rgba(150, 150, 150, 255)' };
             box.attr(attrs);
             tri.attr(attrs);
-            text.attr({ fill: '#333' });
+            text.attr({ fill: '#333' }).toFront();
             if (singleBranch) return;
             text.hide();
             label._branchList.show();
             box.attr({
                 x: label.getBBox().x - textPadding - LRPadding,
                 width: label.getBBox().width,
-                height: label.getBBox().height
+                height: label.getBBox().height + textPadding
             });
         }, function() {
             var attrs = { fill: color };

@@ -128,7 +128,7 @@
     CommitGraphVM.prototype.shortenName = function(name) {
         var len = 24;
         if (name.length <= len) return name;
-        return name.slice(-22);
+        return name[0] + '..' + name.slice(-20);
     };
     CommitGraphVM.prototype.getCommitLink = function(commit) {
         return this.urls.base + '/commits/' + commit.id;
