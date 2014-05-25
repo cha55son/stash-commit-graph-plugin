@@ -51,70 +51,6 @@
         return dot;
     };
 
-    Graph.prototype.drawLabels = function(point, yStep) {
-        if (point[3].length === 0) return;
-        var xStep = point[1][0];
-        var triSize = 10;
-        var semiTriSize = triSize / 3 * 2;
-        var commitPadding = 5;
-        var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
-        var yPos = this.getYPos(yStep);
-        var color = 'rgba(51, 51, 51, 80)';
-        var label = this.paper.set();
-        // Small triangle
-        var triXPos = xPos - semiTriSize;
-        var tri = this.paper.path([
-            'M', triXPos, yPos - (triSize / 2),
-            'L', xPos, yPos,
-            'L', xPos - semiTriSize, yPos + (triSize / 2),
-            'L', triXPos, yPos - triSize
-        ]).attr({ fill: color, stroke: 'none' });
-        label.push(tri);
-        var labelText = '•••';
-        var singleBranch = point[3].length === 1;
-        if (singleBranch) labelText = point[3][0].display;
-        // Draw the text off screen to get the width
-        var text = this.paper
-            .text(0, 0, labelText)
-            .attr({ 
-                fill: '#FFF', 
-                font: '11px monospace'
-            });
-        var textBox = text.getBBox();
-        var textPadding = 3;
-        var LRPadding = 3;
-        var box = this.paper
-            .rect(triXPos - textBox.width - textPadding * 2 - LRPadding * 2, 
-                  yPos - (textBox.height / 2) - textPadding, 
-                  textBox.width + textPadding * 2 + LRPadding * 2, 
-                  textBox.height + textPadding * 2)
-            .attr({ fill: color, stroke: 'none' });
-        label.push(box);
-        // Move the text back into place
-        text.attr({ 
-            x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding, 
-            y: box.getBBox().y + box.getBBox().height / 2 
-        }).toFront();
-        label.push(text);
-        // Setup label event handlers
-        if (singleBranch) label.attr({ cursor: 'pointer' });
-        label.hover(function() {
-            var attrs = { fill: 'rgba(150, 150, 150, 80)' };
-            box.attr(attrs);
-            tri.attr(attrs);
-            if (singleBranch) text.attr({ fill: '#333' });
-        }, function() {
-            var attrs = { fill: color };
-            box.attr(attrs);
-            tri.attr(attrs);
-            if (singleBranch) text.attr({ fill: '#FFF' });
-        });
-        label.click(function() {
-            if (singleBranch) window.open(point[3][0].href);
-        });
-        return label;
-    };
-
     Graph.prototype.drawRoutes = function(point, yStep) {
         // Loop over the routes in reverse so the
         // lines lay on top of each other properly.
@@ -146,6 +82,106 @@
             routes.push(path);
         }
         return routes;
+    };
+
+    Graph.prototype.drawLabels = function(point, yStep) {
+        var branchObjs = point[3];
+        if (branchObjs.length === 0) return;
+        var xStep = point[1][0];
+        var triSize = 10;
+        var semiTriSize = triSize / 3 * 2;
+        var commitPadding = 5;
+        var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
+        var yPos = this.getYPos(yStep);
+        var color = 'rgba(51, 51, 51, 80)';
+        var singleBranch = branchObjs.length === 1;
+
+        this.paper.setStart();
+            // Draw tooltip triangle
+            var triXPos = xPos - semiTriSize;
+            var tri = this.paper.path([
+                'M', triXPos, yPos - (triSize / 2),
+                'L', xPos, yPos,
+                'L', xPos - semiTriSize, yPos + (triSize / 2),
+                'L', triXPos, yPos - triSize
+            ]).attr({ fill: color, stroke: 'none' });
+            var labelText = '•••';
+            if (singleBranch) labelText = branchObjs[0].display;
+            var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer' };
+            // Draw the label text
+            var text = this.paper.text(0, 0, labelText).attr(textAttrs);
+            var textBox = text.getBBox();
+            var textPadding = 3, LRPadding = 3;
+            // Draw the label box
+            var box = this.paper
+                .rect(triXPos - textBox.width - textPadding * 2 - LRPadding * 2, 
+                    yPos - (textBox.height / 2) - textPadding, 
+                    textBox.width + textPadding * 2 + LRPadding * 2, 
+                    textBox.height + textPadding * 2)
+                .attr({ fill: color, stroke: 'none' });
+            // Move the text back into place
+            text.attr({ 
+                x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding, 
+                y: box.getBBox().y + box.getBBox().height / 2 
+            }).toFront();
+            box._oldBBox = box.getBBox();
+        var label = this.paper.setFinish();
+
+        var self = this;
+        var createTextAndHover = function(branch, x, y) {
+            var aText = self.paper.text(x, y, branch.display).attr(textAttrs).attr({ 'text-anchor': 'start', fill: '#333' });
+            aText.attr({ y: aText.getBBox().y + aText.getBBox().height });
+            aText.hover(function() {
+                aText.attr({ 'font-weight': 'bold' });
+            }, function() {
+                aText.attr({ 'font-weight': 'normal' });
+            });
+            aText.click(function() {
+                window.open(branch.href);
+            });
+            return aText;
+        };
+
+        if (!singleBranch) {
+            var rightXPos = text.getBBox().x + text.getBBox().width;
+            var yPos = text.getBBox().y;
+            this.paper.setStart();
+            for (var i = 0; i < branchObjs.length; i++) {
+                var branchObj = branchObjs[i];
+                var aText = createTextAndHover(branchObj, rightXPos, yPos);
+                yPos += aText.getBBox().height;
+            }
+            label._branchList = this.paper.setFinish();
+            label.push(label._branchList);
+            label._branchList.hide();
+        }
+
+        // Setup label event handlers
+        label.hoverset(this.paper, function() {
+            var attrs = { fill: 'rgba(150, 150, 150, 80)' };
+            box.attr(attrs);
+            tri.attr(attrs);
+            text.attr({ fill: '#333' });
+            if (singleBranch) return;
+            text.hide();
+            label._branchList.show();
+            box.attr({
+                x: label.getBBox().x - textPadding - LRPadding,
+                width: label.getBBox().width,
+                height: label.getBBox().height
+            });
+        }, function() {
+            var attrs = { fill: color };
+            box.attr(attrs);
+            tri.attr(attrs);
+            text.attr({ fill: '#FFF' });
+            text.show();
+            box.attr(box._oldBBox);
+            if (singleBranch) return;
+            label._branchList.hide();
+        });
+        label.click(function() { if (singleBranch) window.open(branchObjs[0].href); });
+        return label;
     };
 
     Graph.prototype.getYPos = function(level) {

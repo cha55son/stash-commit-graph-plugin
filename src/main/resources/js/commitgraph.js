@@ -5,8 +5,8 @@
         var hash = 0;
         if (this.length == 0) return hash;
         for (i = 0; i < this.length; i++) {
-            char = this.charCodeAt(i);
-            hash = ((hash<<5)-hash)+char;
+            var aChar = this.charCodeAt(i);
+            hash = ((hash << 5) - hash) + aChar;
             hash = hash & hash; // Convert to 32bit integer
         }
         return hash;
@@ -128,7 +128,7 @@
     CommitGraphVM.prototype.shortenName = function(name) {
         var len = 24;
         if (name.length <= len) return name;
-        return '..' + name.slice(-22);
+        return name.slice(-22);
     };
     CommitGraphVM.prototype.getCommitLink = function(commit) {
         return this.urls.base + '/commits/' + commit.id;

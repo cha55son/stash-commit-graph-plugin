@@ -47,13 +47,15 @@
     font-family: monospace;
 }
 
-.commit-container .commits-table .commit-message {
+.commit-message {
     text-overflow: ellipsis;
     overflow: hidden;
     display: block;
     border-top: 0 !important;
+}
+
+.commit-message a {
     color: #333 !important;
-    text-decoration: none !important;
 }
 
 .commiter-initials {
