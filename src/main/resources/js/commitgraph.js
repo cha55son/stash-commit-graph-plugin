@@ -48,8 +48,14 @@
                 url: this.urls.commits,
                 data: { limit: this.ajax.limit }
             }),
-            $.ajax({ url: this.urls.branches }),
-            $.ajax({ url: this.urls.tags })
+            $.ajax({ 
+                url: this.urls.branches, 
+                data: { limit: this.ajax.limit }
+            }),
+            $.ajax({ 
+                url: this.urls.tags,
+                data: { limit: this.ajax.limit }
+            })
         ).then(function(masterCommitData, branchData, tagData) {
             self.branches = branchData[0].values;
             self.tags = tagData[0].values;
