@@ -49,6 +49,9 @@
     <label>Network</label>
     <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
     <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
+    <icon height="20" width="20">
+        <link>/images/CommitGraphTab.png</link>
+    </icon>
   </web-item>
 
   <stash-resource key="network-soy" name="Network Soy Templates">
