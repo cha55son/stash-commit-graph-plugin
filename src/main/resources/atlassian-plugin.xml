@@ -13,6 +13,14 @@
   <resource type="i18n" name="i18n" location="commitgraph"/>
 
   <!-- add our web resources -->
+  <web-resource key="tab-resources" name="tab-resources">
+    <resource type="download" name="repo.css" location="/css/repo.css"/>
+    <resource type="download" name="icon-commit-graph.svg" location="/images/icon-commit-graph.svg">
+        <param name="content-type" value="image/svg+xml"/>
+    </resource>
+    <context>stash.layout.repository</context>
+  </web-resource>
+
   <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
     <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
@@ -49,9 +57,7 @@
     <label>Network</label>
     <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
     <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
-    <icon height="20" width="20">
-        <link>/images/CommitGraphTab.png</link>
-    </icon>
+    <param name="stashIconClass">aui-icon icon-commit-graph</param>
   </web-item>
 
   <stash-resource key="network-soy" name="Network Soy Templates">
