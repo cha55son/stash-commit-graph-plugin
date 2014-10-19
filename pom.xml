@@ -137,13 +137,8 @@
         </plugins>
     </build>
     <properties>
-<<<<<<< Updated upstream
         <stash.version>2.12.3</stash.version>
         <stash.data.version>2.12.3</stash.data.version>
-=======
-        <stash.version>3.0.1</stash.version>
-        <stash.data.version>3.0.1</stash.data.version>
->>>>>>> Stashed changes
         <amps.version>4.2.20</amps.version>
         <plugin.testrunner.version>1.1.4</plugin.testrunner.version>
     </properties>

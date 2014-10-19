@@ -29,35 +29,6 @@
             ];
         {rb};
     </script>
-<<<<<<< Updated upstream
-    <div class="commit-graph-loader" data-bind="visible: isLoading()">
-        <img src="{plugin_resource('com.plugin.commitgraph.commitgraph:commitgraph-resources', 'images/ajax-loader.gif')}" />
-    </div>
-    <div class="commit-container" data-bind="visible: !isLoading()">
-        <div id="commit-graph" dir="rtl"></div>
-        <div id="commit-graph-table-wrapper">
-            <table class="aui paged-table commits-table" id="commit-graph-table" data-start="0">
-                <thead>
-                    <tr>
-                        <th>Message</th>
-                        <th class="commit-date">Commit Date</th>
-                    </tr>
-                </thead>
-                {literal}
-                <tbody data-bind="foreach: displayCommits">
-                    <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
-                        <td class="commit-message">
-                            <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
-                            <a data-bind="text: message, attr: { href: commitURL }" target="_blank"></a>
-                        </td>
-                        <td class="commit-date" data-bind="text: date.toDateString()"></td>
-                    </tr>
-                </tbody>
-                {/literal}
-            </table>
-        </div>
-    </div>
-=======
     <h2 class="page-panel-content-header">Network</h2>
     <table>
         <tr>
@@ -73,7 +44,6 @@
                             <th class="message" title="Message">Message</th>
                             <th class="comment-count"></th>
                             <th class="timestamp" title="Commit Date">Commit Date</th>
-                            <th class="build-status-commit-list-col" title="Builds">Builds</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,14 +68,12 @@
                             <td class="timestamp">
                                 <time title="16 May 2014 06:01 PM" datetime="2014-05-16T18:01:59-0500">16 May 2014</time>
                             </td>
-                            <td class="build-status-commit-list-col"></td>
                         </tr>
                     </tbody>
                 </table>
             </td>
         </tr>
     </table>
->>>>>>> Stashed changes
 </body>
 </html>
 {/template}
