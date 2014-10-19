@@ -2,6 +2,7 @@
 
 /**
  * @param repository Repository object
+ * @param changesets String object
  */
 {template .network}
 <html>
@@ -16,9 +17,19 @@
     <script>
         var CommitGraph = {lb}
             projectKey: '{$repository.project.key}',
-            repoSlug: '{$repository.slug}'
+            repoSlug: '{$repository.slug}',
+            changesets: [
+                {foreach $changeset in $changesets}
+                    id: '{$changeset.id}',
+                    author: '{$changeset.author}',
+                    authorTimestamp: '{$changeset.authorTimestamp}',
+                    parents: '{$changeset.getParents}'
+                    {if isLast($changeset) == false},{/if}
+                {/foreach}
+            ];
         {rb};
     </script>
+<<<<<<< Updated upstream
     <div class="commit-graph-loader" data-bind="visible: isLoading()">
         <img src="{plugin_resource('com.plugin.commitgraph.commitgraph:commitgraph-resources', 'images/ajax-loader.gif')}" />
     </div>
@@ -46,6 +57,55 @@
             </table>
         </div>
     </div>
+=======
+    <h2 class="page-panel-content-header">Network</h2>
+    <table>
+        <tr>
+            <td class="commit-graph">
+                Testing Commit Graph
+            </td>
+            <td class="commit-graph-table">
+                <table class="aui commits-table">
+                    <thead>
+                        <tr>
+                            <th class="author" title="Author">Author</th>
+                            <th class="changeset" title="Commit">Commit</th>
+                            <th class="message" title="Message">Message</th>
+                            <th class="comment-count"></th>
+                            <th class="timestamp" title="Commit Date">Commit Date</th>
+                            <th class="build-status-commit-list-col" title="Builds">Builds</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-changesetid="34c9dc8888f0dbbf4cd050f583a1d522fed63452" class="commit-row">
+                            <td class="author">
+                                <div class="avatar-with-name" title="Chason Choate">
+                                    <span class="aui-avatar aui-avatar-small user-avatar" data-username="Chason Choate">
+                                    <span class="aui-avatar-inner">
+                                        <img src="http://www.gravatar.com/avatar/f73cfe18f681e315428da8e6f10652a8.jpg?s=48&amp;d=mm" alt="Chason Choate"></span>
+                                    </span>
+                                    <span class="secondary-link" title="Chason Choate">Chason Choate</span>
+                                </div>
+                            </td>
+                            <td class="changeset">
+                                <a class="changesetid" href="/stash/projects/PROJECT_1/repos/scout/commits/34c9dc8888f0dbbf4cd050f583a1d522fed63452">34c9dc8</a>
+                                <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
+                            </td>
+                            <td class="message">
+                                <span>asdfasdl jasdlfkasn ;alsdkfn saodf klasdlf andlasdkf jadlkejfldsajf</span>
+                            </td>
+                            <td class="comment-count"></td>
+                            <td class="timestamp">
+                                <time title="16 May 2014 06:01 PM" datetime="2014-05-16T18:01:59-0500">16 May 2014</time>
+                            </td>
+                            <td class="build-status-commit-list-col"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+>>>>>>> Stashed changes
 </body>
 </html>
 {/template}

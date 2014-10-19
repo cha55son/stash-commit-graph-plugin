@@ -270,6 +270,6 @@
 
     $(document).ready(function() {
         if (!CommitGraph) return;
-        ko.applyBindings(new CommitGraphVM());
+        // ko.applyBindings(new CommitGraphVM());
     });
 })(jQuery, ko, _);

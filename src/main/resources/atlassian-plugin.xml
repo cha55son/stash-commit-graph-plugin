@@ -15,6 +15,8 @@
   <!-- add our web resources -->
   <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
+      <dependency>com.atlassian.stash.stash-web-plugin:paged-table</dependency>
     <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
     <resource type="download" name="underscore.js" location="/js/lib/underscore.js"/>
     <resource type="download" name="knockout.js" location="/js/lib/knockout.js"/>
