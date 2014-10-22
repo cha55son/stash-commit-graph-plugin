@@ -248,7 +248,7 @@
     };
 
     CommitVM.prototype.getAuthorInitials = function() {
-        var tokens = this.author.name.split(' ');
+        var tokens = this.author.displayName.split(' ');
         var initials = tokens.map(function(token) {
             return token[0].toUpperCase();
         }).join('');
