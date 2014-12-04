@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
-  <plugin-info>
-    <description>${project.description}</description>
-    <version>${project.version}</version>
-    <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-    <param name="plugin-icon">images/pluginIcon.png</param>
-    <param name="plugin-logo">images/pluginLogo.png</param>
-  </plugin-info> 
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+    </plugin-info>
 
-  <!-- add our i18n resource -->
-  <resource type="i18n" name="i18n" location="commitgraph"/>
+    <!-- add our i18n resource -->
+    <resource type="i18n" name="i18n" location="commitgraph"/>
 
-  <!-- add our web resources -->
-  <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
-      <dependency>com.atlassian.stash.stash-web-plugin:paged-table</dependency>
-    <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
-    <resource type="download" name="underscore.js" location="/js/lib/underscore.js"/>
-    <resource type="download" name="knockout.js" location="/js/lib/knockout.js"/>
-    <resource type="download" name="raphael.js" location="/js/lib/raphael.js"/>
-    <resource type="download" name="raphael.set.hoverset.js" location="/js/lib/raphael.set.hoverset.js"/>
-    <resource type="download" name="jquery.commits-graph.js" location="/js/jquery.commits-graph.js"/>
-    <resource type="download" name="commitgraph.js" location="/js/commitgraph.js"/>
-    <resource type="download" name="images/" location="/images"/>
-    <context>commitgraph</context>
-  </web-resource>
+    <!-- add our web resources -->
+    <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
+        <resource type="download" name="underscore.js" location="/js/lib/underscore.js"/>
+        <resource type="download" name="knockout.js" location="/js/lib/knockout.js"/>
+        <resource type="download" name="raphael.js" location="/js/lib/raphael.js"/>
+        <resource type="download" name="raphael.set.hoverset.js" location="/js/lib/raphael.set.hoverset.js"/>
+        <resource type="download" name="jquery.commits-graph.js" location="/js/jquery.commits-graph.js"/>
+        <resource type="download" name="commitgraph.js" location="/js/commitgraph.js"/>
+        <resource type="download" name="images/" location="/images"/>
+        <context>commitgraph</context>
+    </web-resource>
 
-  <!-- publish our component -->
-  <component key="myPluginComponent" class="com.plugin.commitgraph.MyPluginComponentImpl" public="true">
-    <interface>com.plugin.commitgraph.MyPluginComponent</interface>
-  </component>
+    <!-- publish our component -->
+    <component key="myPluginComponent" class="com.plugin.commitgraph.MyPluginComponentImpl" public="true">
+        <interface>com.plugin.commitgraph.MyPluginComponent</interface>
+    </component>
 
-  <!-- import from the product container -->
-  <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
-  <component-import key="soyTemplateRenderer" interface="com.atlassian.soy.renderer.SoyTemplateRenderer"/>
-  <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
-  <component-import key="projectService" interface="com.atlassian.stash.project.ProjectService"/>
-  <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
-  <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
+    <!-- import from the product container -->
+    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+    <component-import key="soyTemplateRenderer" interface="com.atlassian.soy.renderer.SoyTemplateRenderer"/>
+    <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
+    <component-import key="projectService" interface="com.atlassian.stash.project.ProjectService"/>
+    <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
+    <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
 
 
-  <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
-    <description key="network-servlet.description">The Network Servlet Plugin</description>
-    <url-pattern>/network/*</url-pattern>
-  </servlet>
+    <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
+        <description key="network-servlet.description">The Network Servlet Plugin</description>
+        <url-pattern>/network/*</url-pattern>
+    </servlet>
 
-  <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
-    <label>Network</label>
-    <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
-    <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
-  </web-item>
+    <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
+        <label>Network</label>
+        <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
+        <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
+    </web-item>
 
-  <stash-resource key="network-soy" name="Network Soy Templates">
-    <directory location="/templates/"/>
-  </stash-resource>
+    <stash-resource key="network-soy" name="Network Soy Templates">
+        <directory location="/templates/"/>
+        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:server-soy-templates</dependency>
+    </stash-resource>
 </atlassian-plugin>

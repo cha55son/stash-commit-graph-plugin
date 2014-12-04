@@ -3,12 +3,15 @@ package networkservlet;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
-import com.atlassian.stash.content.Changeset;
 
+import com.atlassian.stash.content.Changeset;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
 import com.atlassian.stash.commit.CommitService;
+import com.atlassian.stash.commit.graph.*;
 import com.google.common.collect.ImmutableMap;
+import com.atlassian.stash.util.PageUtils;
+import com.atlassian.stash.util.Page;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +32,10 @@ public class NetworkServlet extends HttpServlet {
     private final WebResourceManager webResourceManager;
     private final CommitService commitService;
 
-    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer, RepositoryService repositoryService, WebResourceManager webResourceManager, CommitService commitService) {
+    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
+                          RepositoryService repositoryService,
+                          WebResourceManager webResourceManager,
+                          CommitService commitService) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
         this.webResourceManager = webResourceManager;
@@ -48,19 +54,32 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
 
-        Repository repository = repositoryService.getBySlug(components[1], components[2]);
-        ArrayList<Changeset> changesets = new ArrayList<Changeset>();
-        changesets.add(this.commitService.getChangeset(repository, "8c2eb29"));
+        final Repository repository = repositoryService.getBySlug(components[1], components[2]);
 
         if (repository == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
+        final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
+        TraversalRequest request = new TraversalRequest.Builder().repository(repository).build();
+
+        commitService.traverse(request, new TraversalCallback() {
+            @Override
+            public TraversalStatus onNode(CommitGraphNode node) {
+                changesets.add(commitService.getChangeset(repository, node.getCommit().getId()));
+                return TraversalStatus.CONTINUE;
+            }
+        });
+
+        // Convert the arraylist to a page
+        Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, 25));
+
+        System.out.println("Starting resource manager");
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, "plugin.network.network", ImmutableMap.<String, Object>of(
             "repository", repository,
-            "changesets", changesets
+            "changesetPage", changesetPage
         ));
     }
 

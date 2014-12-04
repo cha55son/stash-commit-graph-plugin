@@ -1,8 +1,8 @@
 {namespace plugin.network}
 
 /**
- * @param repository Repository object
- * @param changesets String object
+ * @param repository Repository
+ * @param changesetPage Page<Changeset>
  */
 {template .network}
 <html>
@@ -19,7 +19,7 @@
             projectKey: '{$repository.project.key}',
             repoSlug: '{$repository.slug}',
             changesets: [
-                {foreach $changeset in $changesets}
+                {foreach $changeset in $changesetPage.values}
                     id: '{$changeset.id}',
                     author: '{$changeset.author}',
                     authorTimestamp: '{$changeset.authorTimestamp}',
@@ -36,41 +36,10 @@
                 Testing Commit Graph
             </td>
             <td class="commit-graph-table">
-                <table class="aui commits-table">
-                    <thead>
-                        <tr>
-                            <th class="author" title="Author">Author</th>
-                            <th class="changeset" title="Commit">Commit</th>
-                            <th class="message" title="Message">Message</th>
-                            <th class="comment-count"></th>
-                            <th class="timestamp" title="Commit Date">Commit Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr data-changesetid="34c9dc8888f0dbbf4cd050f583a1d522fed63452" class="commit-row">
-                            <td class="author">
-                                <div class="avatar-with-name" title="Chason Choate">
-                                    <span class="aui-avatar aui-avatar-small user-avatar" data-username="Chason Choate">
-                                    <span class="aui-avatar-inner">
-                                        <img src="http://www.gravatar.com/avatar/f73cfe18f681e315428da8e6f10652a8.jpg?s=48&amp;d=mm" alt="Chason Choate"></span>
-                                    </span>
-                                    <span class="secondary-link" title="Chason Choate">Chason Choate</span>
-                                </div>
-                            </td>
-                            <td class="changeset">
-                                <a class="changesetid" href="/stash/projects/PROJECT_1/repos/scout/commits/34c9dc8888f0dbbf4cd050f583a1d522fed63452">34c9dc8</a>
-                                <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
-                            </td>
-                            <td class="message">
-                                <span>asdfasdl jasdlfkasn ;alsdkfn saodf klasdlf andlasdkf jadlkejfldsajf</span>
-                            </td>
-                            <td class="comment-count"></td>
-                            <td class="timestamp">
-                                <time title="16 May 2014 06:01 PM" datetime="2014-05-16T18:01:59-0500">16 May 2014</time>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                {call stash.feature.commits.commitsTable}
+                    {param repository: $repository /}
+                    {param changesetPage: $changesetPage /}
+                {/call}
             </td>
         </tr>
     </table>
