@@ -14,22 +14,21 @@
     <title>{$repository.slug} / Network</title>
 </head>
 <body>
-    <script>
-        var CommitGraph = {lb}
-            projectKey: '{$repository.project.key}',
-            repoSlug: '{$repository.slug}',
-            changesets: [
-                {foreach $changeset in $changesetPage.values}
+    <script type="text/javascript">
+        var graphChangesets = [
+            {foreach $changeset in $changesetPage.values}
+                {lb}
                     id: '{$changeset.id}',
-                    author: '{$changeset.author}',
-                    authorTimestamp: '{$changeset.authorTimestamp}',
-                    parents: '{$changeset.getParents}'
-                    {if isLast($changeset) == false},{/if}
-                {/foreach}
-            ];
-        {rb};
+                    parents: [
+                        {foreach $parentChangeset in $changeset.parents}
+                            '{$parentChangeset.id}'
+                            {if isLast($parentChangeset) == false},{/if}
+                        {/foreach}
+                    ]
+                {rb}{if isLast($changeset) == false},{/if}
+            {/foreach}
+        ];
     </script>
-    <h2 class="page-panel-content-header">Network</h2>
     <table>
         <tr>
             <td class="commit-graph">

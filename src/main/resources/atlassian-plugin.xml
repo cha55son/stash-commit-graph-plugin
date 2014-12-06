@@ -15,13 +15,8 @@
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
-        <resource type="download" name="commitgraph.css" location="/css/commitgraph.css"/>
-        <resource type="download" name="underscore.js" location="/js/lib/underscore.js"/>
-        <resource type="download" name="knockout.js" location="/js/lib/knockout.js"/>
-        <resource type="download" name="raphael.js" location="/js/lib/raphael.js"/>
-        <resource type="download" name="raphael.set.hoverset.js" location="/js/lib/raphael.set.hoverset.js"/>
-        <resource type="download" name="jquery.commits-graph.js" location="/js/jquery.commits-graph.js"/>
-        <resource type="download" name="commitgraph.js" location="/js/commitgraph.js"/>
+        <resource type="download" name="css/" location="/css"/>
+        <resource type="download" name="js/" location="/js"/>
         <resource type="download" name="images/" location="/images"/>
         <context>commitgraph</context>
     </web-resource>

@@ -73,9 +73,8 @@ public class NetworkServlet extends HttpServlet {
         });
 
         // Convert the arraylist to a page
-        Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, 25));
+        Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
 
-        System.out.println("Starting resource manager");
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, "plugin.network.network", ImmutableMap.<String, Object>of(
             "repository", repository,
