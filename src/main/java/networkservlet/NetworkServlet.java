@@ -75,7 +75,6 @@ public class NetworkServlet extends HttpServlet {
         // Convert the arraylist to a page
         Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
 
-        webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, "plugin.network.network", ImmutableMap.<String, Object>of(
             "repository", repository,
             "changesetPage", changesetPage
@@ -87,7 +86,7 @@ public class NetworkServlet extends HttpServlet {
         try {
             soyTemplateRenderer.render(
                 resp.getWriter(),
-                "com.plugin.commitgraph.commitgraph:network-soy",
+                "com.plugin.commitgraph.commitgraph:network-soy-templates",
                 templateName,
                 data
             );

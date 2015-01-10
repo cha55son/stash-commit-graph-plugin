@@ -5,8 +5,8 @@
         <description>${project.description}</description>
         <version>${project.version}</version>
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-        <param name="plugin-icon">images/pluginIcon.png</param>
-        <param name="plugin-logo">images/pluginLogo.png</param>
+        <param name="plugin-icon">static/img/pluginIcon.png</param>
+        <param name="plugin-logo">static/img/pluginLogo.png</param>
     </plugin-info>
 
     <!-- add our i18n resource -->
@@ -15,9 +15,7 @@
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
-        <resource type="download" name="css/" location="/css"/>
-        <resource type="download" name="js/" location="/js"/>
-        <resource type="download" name="images/" location="/images"/>
+        <resource type="download" name="static/" location="/static"/>
         <context>commitgraph</context>
     </web-resource>
 
@@ -34,7 +32,6 @@
     <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
     <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
 
-
     <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
         <description key="network-servlet.description">The Network Servlet Plugin</description>
         <url-pattern>/network/*</url-pattern>
@@ -46,9 +43,23 @@
         <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
     </web-item>
 
-    <stash-resource key="network-soy" name="Network Soy Templates">
-        <directory location="/templates/"/>
+    <stash-resource key="network-soy-templates" name="Network Soy Templates">
+        <directory location="/static/">
+            <include>/**/*.soy</include>
+        </directory>
         <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
-        <dependency>com.atlassian.stash.stash-web-plugin:server-soy-templates</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:revision-reference</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
+    </stash-resource>
+
+    <stash-resource key="network-page" name="Network Page Resources">
+        <context>stash.plugin.network</context>
+
+        <directory location="/static/">
+            <exclude>/**/*.soy</exclude>
+        </directory>
+        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:revision-reference</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
     </stash-resource>
 </atlassian-plugin>
