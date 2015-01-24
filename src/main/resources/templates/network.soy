@@ -2,6 +2,7 @@
 
 /**
  * @param repository Repository object
+ * @param settings
  */
 {template .network}
 <html>
@@ -16,7 +17,12 @@
     <script>
         var CommitGraph = {lb}
             projectKey: '{$repository.project.key}',
-            repoSlug: '{$repository.slug}'
+            repoSlug: '{$repository.slug}',
+            refRegex: '{$settings.refRegex}',
+            refRegexReplace: '{$settings.refRegexReplace}',
+            useRegex: '{$settings.useRegex}',
+            useGravatar: '{$settings.useGravatar}',
+            createLinks: '{$settings.createLinks}'
         {rb};
     </script>
     <div class="commit-graph-loader" data-bind="visible: isLoading()">
@@ -30,18 +36,42 @@
                 <table class="aui paged-table commits-table" id="commit-graph-table" data-start="0">
                     <thead>
                         <tr>
-                            <th>Message</th>
+                            <th class="author"></th>
+                            <th class="changeset">Commit</th>
+                            <th class="message">Message</th>
                             <th class="commit-date">Commit Date</th>
                         </tr>
                     </thead>
+
                     {literal}
                     <tbody data-bind="foreach: displayCommits">
                         <tr data-bind="attr: { class: 'commit-row' + (isMerge ? ' merge' : '') }">
-                            <td class="commit-message">
-                                <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
-                                <a data-bind="text: message, attr: { href: commitURL }" target="_blank"></a>
+                            <td class="author">
+                                <div class="avatar-without-name" data-bind="attr: {title: authorName }">
+                                    <span class="aui-avatar aui-avatar-small user-avatar">
+                                        <span class="aui-avatar-inner">
+                                        {/literal}
+                                        {if $settings.useGravatar}
+                                        {literal}
+                                            <img data-bind="attr: {src: getAuthorGravatar(), alt: authorName }">
+                                        {/literal}
+                                        {else}
+                                        {literal}
+                                            <span data-bind="text: getAuthorInitials(), attr: { style: 'background-color: ' + getAuthorColor() }" class="commiter-initials"></span>
+                                        {/literal}
+                                        {/if}
+                                        {literal}
+                                        </span>
+                                    </span>
+                                </div>
                             </td>
-                            <td class="commit-date" data-bind="text: date.toDateString()"></td>
+                            <td class="changeset">
+                                <a class="changesetid" data-bind="text: commitHashShort, attr: { href: commitURL }"></a>
+                            </td>
+                            <td class="message">
+                                <span data-bind="text: message"></span>
+                            </td>
+                            <td class="commit-date" data-bind="text: getCommitDate()"></td>
                         </tr>
                     </tbody>
                     {/literal}

@@ -1,0 +1,139 @@
+{namespace plugin.commitgraph}
+
+/**
+ * Repository settings page template
+ * @param repository
+ * @param settings
+ * @param errors
+ */
+{template .repositorySettingsPage}
+
+<html>
+<meta name="decorator" content="stash.repository.settings">
+<meta name="projectKey" content="{$repository.project.key}">
+<meta name="repositorySlug" content="{$repository.slug}">
+<meta name="activeTab" content="repository-settings-git-ops-panel">
+<head>
+    <title>Stash Network Repository Settings</title>
+</head>
+<body>
+<style>
+    {literal}
+    .aui-group.wrap {
+        border-top: 1px solid #cccccc;
+        padding: 5px 0;
+    }
+    .aui-group.wrap .aui-group-description {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    form.aui .buttons-container {
+        border-top: 1px solid #cccccc;
+        padding-top: 10px;
+    }
+    {/literal}
+</style>
+{call aui.group.group}
+    {param content}
+        {call aui.group.item}
+            {param content}
+                <h2>Network Repository Settings</h2>
+            {/param}
+        {/call}
+    {/param}
+{/call}
+
+{if $errors.0}
+    {call widget.aui.message.error}
+        {param content}
+            <ul>
+            {foreach $error in $errors}
+                <li>{$error}</li>
+            {/foreach}
+            </ul>
+        {/param}
+    {/call}
+{/if}
+
+{call aui.group.group} {param content} {call aui.form.form}
+    {param action: '' /}
+    {param content}
+        {call aui.form.checkboxField}
+            {param legendContent: '' /}
+            {param fields: [[
+                'id': 'useGravatar',
+                'labelText': 'Use gravatar service to show commit author avatar',
+                'isChecked': $settings.useGravatar
+                ]] /}
+        {/call}
+        {call aui.form.checkboxField}
+            {param legendContent: '' /}
+            {param fields: [[
+                'id': 'createLinks',
+                'labelText': 'Create links from "http://..." text in commit messages',
+                'isChecked': $settings.createLinks
+                ]] /}
+        {/call}
+
+        {call aui.group.group}
+            {param extraClasses: 'wrap' /}
+            {param content}
+                <div class="aui-group-description">
+                    <h3>Link from issue ID</h3>
+                    <p>Allows to use regex to match issue id in commit message and create link from it.</p>
+                </div>
+                {call aui.form.checkboxField}
+                    {param legendContent: '' /}
+                    {param fields: [[
+                        'id': 'useRegex',
+                        'labelText': 'Enable',
+                        'isChecked': $settings.useRegex
+                        ]] /}
+                {/call}
+                {call aui.form.textField}
+                    {param id: 'refRegex' /}
+                    {param labelContent: 'Regex to match issue id' /}
+                    {param value: $settings.refRegex /}
+                    {param descriptionText: 'Regular expression to match issue id. Note that special characters must be preceded with extra \\. Default value is "\\\\B#(\\\\d+)".' /}
+                {/call}
+                {call aui.form.textField}
+                    {param id: 'refRegexReplace' /}
+                    {param labelContent: 'Link href' /}
+                    {param value: $settings.refRegexReplace /}
+                    {param descriptionText: 'Regex matches will be replaced by <a> tag with "href" attribute filled from this replace pattern. Use $1, $2, ...  to insert group matches.' /}
+                {/call}
+            {/param}
+        {/call}
+
+        {call aui.form.buttons}
+            {param content}
+                {call aui.form.submit}
+                    {param id: 'saveButton' /}
+                    {param text: 'Save' /}
+                    {param type: 'submit' /}
+                    {param extraClasses: 'aui-button aui-button-primary' /}
+                {/call}
+            {/param}
+        {/call}
+    {/param}
+{/call} {/param} {/call}
+
+{literal}<script>
+AJS.$("form").submit(function() {
+    AJS.$("input").removeAttr("disabled");
+    AJS.$("input").addAttr("readonly");
+});
+
+function updateRegexState(checked) {
+    AJS.$("#refRegex").prop("disabled", !checked);
+    AJS.$("#refRegexReplace").prop("disabled", !checked);
+}
+AJS.$("#useRegex").change(function() {
+    updateRegexState(this.checked);
+});
+updateRegexState(AJS.$("#useRegex").prop('checked'));
+
+</script>{/literal}
+</body>
+</html>
+{/template}

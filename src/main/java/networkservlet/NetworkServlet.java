@@ -1,5 +1,6 @@
 package networkservlet;
 
+import com.plugin.commitgraph.admin.SettingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +22,19 @@ import com.atlassian.plugin.webresource.WebResourceManager;
 public class NetworkServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
 
+    private final SettingsManager settingsManager;
     private final RepositoryService repositoryService;
     private final SoyTemplateRenderer soyTemplateRenderer;
     private final WebResourceManager webResourceManager;
 
-    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer, RepositoryService repositoryService, WebResourceManager webResourceManager) {
+    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
+                          RepositoryService repositoryService,
+                          WebResourceManager webResourceManager,
+                          SettingsManager settingsManager) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
         this.webResourceManager = webResourceManager;
+        this.settingsManager = settingsManager;
     }
 
     protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {
@@ -67,6 +73,9 @@ public class NetworkServlet extends HttpServlet {
         }
 
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
-        render(resp, "plugin.network.network", ImmutableMap.<String, Object>of("repository", repository));
+        render(resp, "plugin.network.network", ImmutableMap.<String, Object>of (
+                "repository", repository,
+                "settings", settingsManager.getRepositorySettings(repository)
+        ));
     }
 }

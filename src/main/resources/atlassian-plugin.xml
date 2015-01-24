@@ -31,6 +31,8 @@
     <resource type="download" name="jquery.commits-graph.js" location="/js/jquery.commits-graph.js"/>
     <resource type="download" name="commitgraph.js" location="/js/commitgraph.js"/>
     <resource type="download" name="images/" location="/images"/>
+    <resource location="/js/lib/jquery.linkify.js" name="jquery.linkify.js" type="download"/>
+    <resource location="/js/lib/jquery.md5.js" name="jquery.md5.js" type="download"/>
     <context>commitgraph</context>
   </web-resource>
 
@@ -39,6 +41,9 @@
     <interface>com.plugin.commitgraph.MyPluginComponent</interface>
   </component>
 
+  <component class="com.plugin.commitgraph.admin.SettingsManagerImpl" key="settings-manager" public="true">
+    <interface>com.plugin.commitgraph.admin.SettingsManager</interface>
+  </component>
   <!-- import from the product container -->
   <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
   <component-import key="soyTemplateRenderer" interface="com.atlassian.soy.renderer.SoyTemplateRenderer"/>
@@ -47,20 +52,37 @@
   <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
   <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
 
+  <component-import interface="com.atlassian.activeobjects.external.ActiveObjects" key="activeObjects"/>
 
   <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
     <description key="network-servlet.description">The Network Servlet Plugin</description>
     <url-pattern>/network/*</url-pattern>
   </servlet>
 
+  <servlet class="com.plugin.commitgraph.admin.RepositorySettingsServlet" key="repository-settings-servlet">
+    <description key="repository-settings-servlet.description">The Network Plugin Repository Settings</description>
+    <url-pattern>/networkrepositorysettings/*</url-pattern>
+  </servlet>
   <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
     <label>Network</label>
     <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
     <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
     <param name="stashIconClass">aui-icon icon-commit-graph</param>
   </web-item>
+  <web-item key="repository-settings-link" name="Network plugin" section="stash.repository.settings.panel" weight="20">
+    <label>Network plugin</label>
+    <link linkId="scs-repository-settings-link">/plugins/servlet/networkrepositorysettings/${repository.project.key}/${repository.slug}
+        </link>
+    <tooltip>Repository configuration options for Stash Network plugin</tooltip>
+  </web-item>
+
+  <ao key="ao-module">
+    <description>Stash Commitgraph settings DB</description>
+    <entity>com.plugin.commitgraph.admin.RepositorySettings</entity>
+  </ao>
 
   <stash-resource key="network-soy" name="Network Soy Templates">
     <directory location="/templates/"/>
+    <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
   </stash-resource>
 </atlassian-plugin>
