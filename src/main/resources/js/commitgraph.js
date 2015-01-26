@@ -236,6 +236,21 @@
                 if (box.width > width)
                     self.els.$graphBox.css('overflow-x', 'scroll');
                 $('.commit-container').css('padding-left', width);
+
+                // Create link from issues id
+                if (CommitGraph.useRegex == 'true') {
+                    console.log("a");
+                    var re = new RegExp(CommitGraph.refRegex, 'g');
+
+                    $(".commits-table .message > span").each(function () {
+                        jQuery(this).html(jQuery(this).text().replace(re, "<a href=\"" + CommitGraph.refRegexReplace + "\" target=\"_blank\">$&</a>"));
+                    });
+                }
+
+                // Create link from "http://..." text
+                if (CommitGraph.createLinks == 'true') {
+                    $(".commits-table .message").linkify();
+                }
             }
         });
     };
@@ -245,6 +260,13 @@
         this.isMerge = this.parents.length > 1;
         this.date = new Date(this.authorTimestamp);
         this.commitURL = graph.getCommitLink(this);
+        this.authorName = this.author.name;
+        this.authorEmail = this.author.emailAddress;
+        this.commitHashShort = this.displayId;
+    };
+
+    CommitVM.prototype.getAuthorGravatar = function() {
+        return 'http://www.gravatar.com/avatar/' + jQuery.md5(this.author.emailAddress) + '.jpg?s=48'
     };
 
     CommitVM.prototype.getAuthorInitials = function() {
@@ -253,6 +275,13 @@
             return token[0].toUpperCase();
         }).join('');
         return initials.slice(0, 2);
+    };
+
+	CommitVM.prototype.getCommitDate = function() {
+        var d = new Date(this.authorTimestamp);
+        // For further localization
+        var month = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        return d.getDate() + ' ' + month[d.getMonth()] + ' ' + d.getFullYear();
     };
 
     CommitVM.prototype.getAuthorColor = function() {

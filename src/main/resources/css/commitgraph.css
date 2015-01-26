@@ -16,12 +16,12 @@
 
 #commit-graph-table {
     font-size: 12px;
-    table-layout: fixed;
+    line-height: 1;
 }
 
 #commit-graph-table td, #commit-graph-table th {
     white-space: nowrap;
-    padding: 6px 10px !important;
+    padding: 3px 7px !important;
 }
 
 #commit-graph {
@@ -30,7 +30,7 @@
     left: 0;
     max-width: 50%;
     overflow: hidden;
-    padding-top: 30px;
+    padding-top: 19px;
 }
 
 .commit-container {
@@ -79,4 +79,33 @@
 
 .commits-table .changesetid + .merge-lozenge {
     margin-left: 5px;
+}
+
+.commits-table td.author {
+	text-align: center !important;
+}
+.commits-table td.author .user-avatar {
+	margin-right: 0;
+}
+
+.commits-table .message {
+	max-width: 250px;
+}
+
+.commits-table .message > span {
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	display: inline-block;
+	width: 100%;
+	vertical-align: middle;
+}
+
+.commits-table td.author, .commits-table .changeset, .commits-table .commit-date {
+	width: 1%;
+}
+
+.commits-table td.changeset, .commits-table td.message, .commits-table td.commit-date {
+	vertical-align: middle;
 }
