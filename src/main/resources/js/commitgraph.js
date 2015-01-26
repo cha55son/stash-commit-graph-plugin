@@ -238,17 +238,17 @@
                 $('.commit-container').css('padding-left', width);
 
                 // Create link from issues id
-                if (CommitGraph.useRegex) {
+                if (CommitGraph.useRegex == 'true') {
                     console.log("a");
                     var re = new RegExp(CommitGraph.refRegex, 'g');
 
-                    $(".commits-table .message").each(function () {
+                    $(".commits-table .message > span").each(function () {
                         jQuery(this).html(jQuery(this).text().replace(re, "<a href=\"" + CommitGraph.refRegexReplace + "\" target=\"_blank\">$&</a>"));
                     });
                 }
 
                 // Create link from "http://..." text
-                if (CommitGraph.createLinks) {
+                if (CommitGraph.createLinks == 'true') {
                     $(".commits-table .message").linkify();
                 }
             }
