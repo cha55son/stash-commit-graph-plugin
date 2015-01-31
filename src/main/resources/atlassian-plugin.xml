@@ -48,8 +48,7 @@
             <include>/**/*.soy</include>
         </directory>
         <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
-        <dependency>com.atlassian.stash.stash-web-plugin:revision-reference</dependency>
-        <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
+        <dependency>com.atlassian.stash.stash-web-plugin:server-soy-templates</dependency>
     </stash-resource>
 
     <stash-resource key="network-page" name="Network Page Resources">
@@ -58,8 +57,5 @@
         <directory location="/static/">
             <exclude>/**/*.soy</exclude>
         </directory>
-        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
-        <dependency>com.atlassian.stash.stash-web-plugin:revision-reference</dependency>
-        <dependency>com.atlassian.stash.stash-web-plugin:commits-table</dependency>
     </stash-resource>
 </atlassian-plugin>

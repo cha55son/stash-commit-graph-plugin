@@ -1,6 +1,5 @@
 package networkservlet;
 
-import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 
@@ -29,16 +28,13 @@ public class NetworkServlet extends HttpServlet {
 
     private final RepositoryService repositoryService;
     private final SoyTemplateRenderer soyTemplateRenderer;
-    private final WebResourceManager webResourceManager;
     private final CommitService commitService;
 
     public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
                           RepositoryService repositoryService,
-                          WebResourceManager webResourceManager,
                           CommitService commitService) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
-        this.webResourceManager = webResourceManager;
         this.commitService = commitService;
     }
 
@@ -46,16 +42,12 @@ public class NetworkServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Get repoSlug from path
         String pathInfo = req.getPathInfo();
-
         String[] components = pathInfo.split("/");
-
         if (components.length < 3) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-
         final Repository repository = repositoryService.getBySlug(components[1], components[2]);
-
         if (repository == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -63,19 +55,22 @@ public class NetworkServlet extends HttpServlet {
 
         final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
         TraversalRequest request = new TraversalRequest.Builder().repository(repository).build();
-
         commitService.traverse(request, new TraversalCallback() {
             @Override
             public TraversalStatus onNode(CommitGraphNode node) {
-                changesets.add(commitService.getChangeset(repository, node.getCommit().getId()));
-                return TraversalStatus.CONTINUE;
+                Changeset changeset = commitService.getChangeset(repository, node.getCommit().getId());
+                changesets.add(changeset);
+                if (changeset.getParents().size() > 0) {
+                    return TraversalStatus.CONTINUE;
+                } else {
+                    return TraversalStatus.FINISH;
+                }
             }
         });
-
         // Convert the arraylist to a page
         Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
 
-        render(resp, "plugin.network.network", ImmutableMap.<String, Object>of(
+        render(resp, "stash.plugin.network", ImmutableMap.<String, Object>of(
             "repository", repository,
             "changesetPage", changesetPage
         ));

@@ -1,0 +1,101 @@
+.chason-test {
+    background-color: orange;
+}
+.changesetid {
+  font-family: monospace;
+}
+
+/* =============== Commits Table ==================== */
+.commits-table {
+  /* IE is buggy with row borders when setting the opacity on the td, so we have to set it on the children of the td */
+
+}
+.commits-table .author,
+.commits-table .changeset,
+.commits-table .comment-count,
+.commits-table .timestamp {
+  width: 1%;
+  /* to force the table cell to shrinkwrap to the longest element and not expand with browser width */
+
+  white-space: nowrap;
+}
+.commits-table .author,
+.commits-table .changeset,
+.commits-table .timestamp,
+.commits-table .message,
+.commits-table .comment-count {
+  vertical-align: baseline;
+}
+.commits-table .author > div {
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: text-bottom;
+  max-width: 200px;
+}
+.commits-table .message {
+  max-width: 450px;
+}
+.commits-table .message > span {
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  width: 100%;
+  vertical-align: bottom;
+}
+.commits-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+.commits-table ul {
+  padding: 0;
+  list-style: none;
+}
+.commits-table tr {
+  border-left: 2px solid #ffffff;
+}
+.commits-table tr.focused-commit {
+  background-color: #f5f5f5;
+  border-left: 2px solid #3b73af;
+}
+.commits-table tr.focused-commit a:focus {
+  outline: none;
+  text-decoration: none;
+}
+.commits-table tr.merge td > * {
+  -webkit-transition: opacity 0.3s;
+  -moz-transition: opacity 0.3s;
+  -ms-transition: opacity 0.3s;
+  -o-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+  opacity: 0.35;
+  filter: alpha(opacity=35);
+}
+.commits-table.show-merges tr.merge td > * {
+  opacity: 1;
+  filter: none;
+}
+.commits-table + .commits-table-message {
+  margin-top: 10px;
+  text-align: center;
+  color: #999999;
+}
+.commits-table + .commits-table-message.no-results {
+  color: #d04437;
+}
+.commits-table .changesetid + .merge-lozenge {
+  margin-left: 5px;
+}
+.commits-table-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 16px auto 0;
+}
+span.comment-count {
+  color: #707070;
+}
+span.comment-count .aui-icon {
+  margin-right: 5px;
+}
