@@ -14,9 +14,8 @@
 
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
-        <dependency>com.atlassian.auiplugin:ajs</dependency>
         <resource type="download" name="static/" location="/static"/>
-        <context>commitgraph</context>
+        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
     </web-resource>
 
     <!-- publish our component -->
@@ -30,7 +29,6 @@
     <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
     <component-import key="projectService" interface="com.atlassian.stash.project.ProjectService"/>
     <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
-    <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
 
     <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
         <description key="network-servlet.description">The Network Servlet Plugin</description>
@@ -47,7 +45,6 @@
         <directory location="/static/">
             <include>/**/*.soy</include>
         </directory>
-        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
         <dependency>com.atlassian.stash.stash-web-plugin:server-soy-templates</dependency>
     </stash-resource>
 
@@ -57,5 +54,6 @@
         <directory location="/static/">
             <exclude>/**/*.soy</exclude>
         </directory>
+        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
     </stash-resource>
 </atlassian-plugin>

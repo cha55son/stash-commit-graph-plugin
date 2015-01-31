@@ -15,8 +15,44 @@
     <title>{$repository.slug} / Network</title>
 </head>
 <body>
-    <script type="text/javascript">
-        var graphChangesets = [
+    <table class="commit-graph-table">
+        <tbody>
+            <td class="commit-graph">
+                <div class="header-fill">&nbsp;</div>
+                <div class="graph-body">
+                    Commit graph slot
+                </div>
+            </td>
+            <td class="commits">
+                <table class="aui commits-table">
+                    <thead>
+                        <th class="author">Author</th>
+                        <th class="changeset">Commit</th>
+                        <th class="message">Message</th>
+                        <th class="comment-count"></th>
+                        <th class="timestamp">Commit Date</th>
+                    </thead>
+                    <tbody>
+                        {call .network_list}
+                            {param repository: $repository /}
+                            {param changesetPage: $changesetPage /}
+                        {/call}
+                    </tbody>
+                </table>
+            </td>
+        </tbody>
+    </table>
+</body>
+</html>
+{/template}
+
+/**
+ * @param repository
+ * @param changesetPage
+ */
+{template .network_list}
+    <script>
+        require('plugin/commitgraph').applyChangesets([
             {foreach $changeset in $changesetPage.values}
                 {lb}
                     id: '{$changeset.id}',
@@ -28,63 +64,50 @@
                     ]
                 {rb}{if isLast($changeset) == false},{/if}
             {/foreach}
-        ];
+        ]);
     </script>
-    <table class="aui commits-table">
-        <thead>
-            <th class="author">Author</th>
-            <th class="changeset">Commit</th>
-            <th class="message">Message</th>
-            <th class="comment-count"></th>
-            <th class="timestamp">Commit Date</th>
-        </thead>
-        <tbody>
-            {foreach $changeset in $changesetPage.values}
-                <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
-                    <td class="author">
-                        {call stash.widget.avatarWithName}
-                            {param size: 'small' /}
-                            {param person: $changeset.author /}
-                            {param link: true /}
-                            {param linkExtraClasses: 'secondary-link' /}
+    {foreach $changeset in $changesetPage.values}
+        <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
+            <td class="author">
+                {call stash.widget.avatarWithName}
+                    {param size: 'small' /}
+                    {param person: $changeset.author /}
+                    {param link: true /}
+                    {param linkExtraClasses: 'secondary-link' /}
+                {/call}
+            </td>
+            <td class="changeset">
+                {call stash.feature.changeset.link}
+                    {param repository: $repository /}
+                    {param changeset: $changeset /}
+                {/call}
+                <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
+                {if length($changeset.parents) >= 2}
+                    {call stash.widget.lozenge.merge}
+                        {param abbreviated: true /}
+                    {/call}
+                {/if}
+            </td>
+            <td class="message"><span>{$changeset.message|truncate:500|escapeHtml}</span></td>
+            <td class="comment-count">
+                {if $changeset.attributes and $changeset.attributes.commentCount}
+                    // looped because $changeset.attributes has sets of values, should only ever loop once
+                    {foreach $count in $changeset.attributes.commentCount}
+                        {call stash.feature.commentCount}
+                            {param count: $count /}
                         {/call}
-                    </td>
-                    <td class="changeset">
-                        {call stash.feature.changeset.link}
-                            {param repository: $repository /}
-                            {param changeset: $changeset /}
-                        {/call}
-                        <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
-                        {if length($changeset.parents) >= 2}
-                            {call stash.widget.lozenge.merge}
-                                {param abbreviated: true /}
-                            {/call}
-                        {/if}
-                    </td>
-                    <td class="message"><span>{$changeset.message|truncate:500|escapeHtml}</span></td>
-                    <td class="comment-count">
-                        {if $changeset.attributes and $changeset.attributes.commentCount}
-                            // looped because $changeset.attributes has sets of values, should only ever loop once
-                            {foreach $count in $changeset.attributes.commentCount}
-                                {call stash.feature.commentCount}
-                                    {param count: $count /}
-                                {/call}
-                            {/foreach}
-                        {/if}
-                    </td>
-                    <td class="timestamp">
-                        {if $changeset.authorTimestamp}
-                            <time title="{format_date($changeset.authorTimestamp, 'full')}" datetime="{format_date($changeset.authorTimestamp, 'timestamp')}">
-                                {format_date($changeset.authorTimestamp, 'shortAge')}
-                            </time>
-                        {else}
-                            <time>Unknown</time>
-                        {/if}
-                    </td>
-                </tr>
-            {/foreach}
-        </tbody>
-    </table>
-</body>
-</html>
+                    {/foreach}
+                {/if}
+            </td>
+            <td class="timestamp">
+                {if $changeset.authorTimestamp}
+                    <time title="{format_date($changeset.authorTimestamp, 'full')}" datetime="{format_date($changeset.authorTimestamp, 'timestamp')}">
+                        {format_date($changeset.authorTimestamp, 'shortAge')}
+                    </time>
+                {else}
+                    <time>Unknown</time>
+                {/if}
+            </td>
+        </tr>
+    {/foreach}
 {/template}

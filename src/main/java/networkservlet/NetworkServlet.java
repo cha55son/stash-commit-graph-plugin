@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.atlassian.stash.util.PageUtils;
 import com.atlassian.stash.util.Page;
 
+import org.apache.xpath.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,9 @@ import java.util.Map;
 
 public class NetworkServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
+
+    static final String NETWORK_PAGE = "stash.plugin.network";
+    static final String NETWORK_PAGE_FRAGMENT = "stash.plugin.network_list";
 
     private final RepositoryService repositoryService;
     private final SoyTemplateRenderer soyTemplateRenderer;
@@ -43,6 +47,8 @@ public class NetworkServlet extends HttpServlet {
         // Get repoSlug from path
         String pathInfo = req.getPathInfo();
         String[] components = pathInfo.split("/");
+        Boolean contentsOnly = !(req.getParameter("contentsOnly") == null);
+
         if (components.length < 3) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
@@ -70,7 +76,7 @@ public class NetworkServlet extends HttpServlet {
         // Convert the arraylist to a page
         Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
 
-        render(resp, "stash.plugin.network", ImmutableMap.<String, Object>of(
+        render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
             "repository", repository,
             "changesetPage", changesetPage
         ));

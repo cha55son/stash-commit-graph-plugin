@@ -1,7 +1,7 @@
 ![Commit Graph](https://marketplace-cdn.atlassian.com/files/images/com.plugin.commitgraph.commitgraph/bbbd9a33-518d-4462-bd28-77b03e76965f.png)
 # Installation
 
-tbd
+Refer to the Atlassian Marketplace. Installing plugin versions that are not meant for your Stash version can cause stability issues.
 
 # Development
 

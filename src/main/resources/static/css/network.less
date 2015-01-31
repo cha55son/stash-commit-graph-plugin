@@ -1,11 +1,28 @@
-.chason-test {
-    background-color: orange;
+.commit-graph-table {
+    width: 100%;
+
+    .commit-graph {
+        vertical-align: top;
+
+        .header-fill {
+            vertical-align: baseline;
+            /* Account for the border of the table header */
+            padding: 7px 10px 8px 10px;
+            text-align: left;
+            font-weight: bold;
+            background-color: #D4A9AE;
+        }
+        .graph-body {
+            background-color: #B0E8C8;
+        }
+    }
 }
+
+
+/* =============== Commits Table ==================== */
 .changesetid {
   font-family: monospace;
 }
-
-/* =============== Commits Table ==================== */
 .commits-table {
   /* IE is buggy with row borders when setting the opacity on the td, so we have to set it on the children of the td */
 
