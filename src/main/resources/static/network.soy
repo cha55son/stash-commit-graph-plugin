@@ -21,9 +21,7 @@
         <tbody>
             <td class="commit-graph">
                 <div class="header-fill">&nbsp;</div>
-                <div class="graph-body">
-                    Commit graph slot
-                </div>
+                <div class="graph-body"></div>
             </td>
             <td class="commits">
                 <table class="aui commits-table">
@@ -43,12 +41,12 @@
                         {/call}
                     </tbody>
                 </table>
-                <div class="loading-indicator">
-                    <div class="spinner">
-                </div>
             </td>
         </tbody>
     </table>
+    <div class="commitgraph-loading-indicator">
+        <div class="spinner">
+    </div>
 </body>
 </html>
 {/template}
@@ -60,27 +58,6 @@
  * @param limit <Integer>
  */
 {template .network_fragment}
-    {if $changesetPage.size > 0}
-        <tr class="commit-row" style="display: none">
-            <td colspan="5">
-                <commitgraph-javascript>
-                    require('plugin/commitgraph').applyChangesets([
-                        {foreach $changeset in $changesetPage.values}
-                            {lb}
-                                id: '{$changeset.id}',
-                                parents: [
-                                    {foreach $parentChangeset in $changeset.parents}
-                                        '{$parentChangeset.id}'
-                                        {if isLast($parentChangeset) == false},{/if}
-                                    {/foreach}
-                                ]
-                            {rb}{if isLast($changeset) == false},{/if}
-                        {/foreach}
-                    ]);
-                </commitgraph-javascript>
-            </td>
-        </tr>
-    {/if}
     {foreach $changeset in $changesetPage.values}
         <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
             <td class="author">
@@ -125,14 +102,31 @@
             </td>
         </tr>
     {/foreach}
-    <tr class="infinitescroll-nav">
-        <td colspan="5" class="nav-links">
-            {if $page > 1}
-                <a class="scroll-nav scroll-prev" href="?page={$page - 1}">&larr; Prev</a>
-            {/if}
-            {if $changesetPage.size >= $limit}
-                <a class="scroll-nav scroll-next" href="?page={$page + 1}">Next &rarr;</a>
-            {/if}
-        </td>
-    </tr>
+    {if $changesetPage.size > 0}
+        <tr class="infinitescroll-nav">
+            <td colspan="5" class="nav-links">
+                {if $page > 1}
+                    <a class="scroll-nav scroll-prev" href="?page={$page - 1}">&larr; Prev</a>
+                {/if}
+                {if $changesetPage.size >= $limit}
+                    <a class="scroll-nav scroll-next" href="?page={$page + 1}">Next &rarr;</a>
+                {/if}
+                <commitgraph-javascript style="display: none">
+                    require('plugin/commitgraph/network').applyChangesets([
+                        {foreach $changeset in $changesetPage.values}
+                            {lb}
+                                id: '{$changeset.id}',
+                                parents: [
+                                    {foreach $parentChangeset in $changeset.parents}
+                                        {lb} id: '{$parentChangeset.id}' {rb}
+                                        {if isLast($parentChangeset) == false},{/if}
+                                    {/foreach}
+                                ]
+                            {rb}{if isLast($changeset) == false},{/if}
+                        {/foreach}
+                    ]);
+                </commitgraph-javascript>
+            </td>
+        </tr>
+    {/if}
 {/template}
