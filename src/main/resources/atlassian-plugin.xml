@@ -15,6 +15,8 @@
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <resource type="download" name="static/" location="/static"/>
+        <resource type="download" name="jquery.infinitescroll.min.js" location="/static/js/lib/jquery.infinitescroll.min.js"/>
+
         <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
     </web-resource>
 
@@ -29,6 +31,7 @@
     <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
     <component-import key="projectService" interface="com.atlassian.stash.project.ProjectService"/>
     <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
+    <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
 
     <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
         <description key="network-servlet.description">The Network Servlet Plugin</description>

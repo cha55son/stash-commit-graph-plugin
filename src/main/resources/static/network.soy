@@ -3,6 +3,7 @@
 /**
  * @param repository Repository
  * @param changesetPage Page<Changeset>
+ * @param page <Integer>
  */
 {template .network}
 {webResourceManager_requireResourcesForContext('stash.plugin.network')}
@@ -32,10 +33,11 @@
                         <th class="comment-count"></th>
                         <th class="timestamp">Commit Date</th>
                     </thead>
-                    <tbody>
-                        {call .network_list}
+                    <tbody class="infinitescroll">
+                        {call .network_fragment}
                             {param repository: $repository /}
                             {param changesetPage: $changesetPage /}
+                            {param page: $page /}
                         {/call}
                     </tbody>
                 </table>
@@ -49,8 +51,9 @@
 /**
  * @param repository
  * @param changesetPage
+ * @param page
  */
-{template .network_list}
+{template .network_fragment}
     <script>
         require('plugin/commitgraph').applyChangesets([
             {foreach $changeset in $changesetPage.values}
@@ -110,4 +113,11 @@
             </td>
         </tr>
     {/foreach}
+    <tr>
+        <td><a class="scroll-next" href="?page={$page + 1}&contentsOnly=true">Next Page</a></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
 {/template}

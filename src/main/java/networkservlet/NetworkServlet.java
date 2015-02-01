@@ -7,6 +7,8 @@ import com.atlassian.stash.content.Changeset;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
 import com.atlassian.stash.commit.CommitService;
+import com.atlassian.plugin.webresource.WebResourceManager;
+
 import com.atlassian.stash.commit.graph.*;
 import com.google.common.collect.ImmutableMap;
 import com.atlassian.stash.util.PageUtils;
@@ -28,18 +30,21 @@ public class NetworkServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
 
     static final String NETWORK_PAGE = "stash.plugin.network";
-    static final String NETWORK_PAGE_FRAGMENT = "stash.plugin.network_list";
+    static final String NETWORK_PAGE_FRAGMENT = "stash.plugin.network_fragment";
 
     private final RepositoryService repositoryService;
     private final SoyTemplateRenderer soyTemplateRenderer;
     private final CommitService commitService;
+    private final WebResourceManager webResourceManager;
 
     public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
                           RepositoryService repositoryService,
-                          CommitService commitService) {
+                          CommitService commitService,
+                          WebResourceManager webResourceManager) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
         this.commitService = commitService;
+        this.webResourceManager = webResourceManager;
     }
 
     @Override
@@ -48,6 +53,10 @@ public class NetworkServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
         String[] components = pathInfo.split("/");
         Boolean contentsOnly = !(req.getParameter("contentsOnly") == null);
+        String pageStr = req.getParameter("page");
+        Integer page = Math.max(Integer.parseInt(pageStr == null ? "0" : pageStr), 1) - 1;
+        final Integer limit = 50;
+        final Integer offset = page * limit;
 
         if (components.length < 3) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -61,12 +70,30 @@ public class NetworkServlet extends HttpServlet {
 
         final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
         TraversalRequest request = new TraversalRequest.Builder().repository(repository).build();
+        final Integer counter = 0;
         commitService.traverse(request, new TraversalCallback() {
+            private Integer counter;
+            @Override
+            public void onStart(TraversalContext context) {
+                this.counter = 0;
+                System.out.println("Offset: " + offset);
+                System.out.println("Limit: " + limit);
+            }
             @Override
             public TraversalStatus onNode(CommitGraphNode node) {
                 Changeset changeset = commitService.getChangeset(repository, node.getCommit().getId());
-                changesets.add(changeset);
+                Boolean captured = false;
+                // If the counter falls between offset and (limit + offset) store it in the array.
+                if (counter >= offset && counter < (offset + limit)) {
+                    changesets.add(changeset);
+                    captured = true;
+                } else if (counter >= (offset + limit)) {
+                    return TraversalStatus.FINISH;
+                }
+                System.out.println("[" + counter.toString() + "]: " + changeset.getId() + (captured ? " captured" : ""));
+                // If there are no parents then we are at the root node.
                 if (changeset.getParents().size() > 0) {
+                    counter++;
                     return TraversalStatus.CONTINUE;
                 } else {
                     return TraversalStatus.FINISH;
@@ -76,9 +103,11 @@ public class NetworkServlet extends HttpServlet {
         // Convert the arraylist to a page
         Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
 
+        webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
             "repository", repository,
-            "changesetPage", changesetPage
+            "changesetPage", changesetPage,
+            "page", page
         ));
     }
 
