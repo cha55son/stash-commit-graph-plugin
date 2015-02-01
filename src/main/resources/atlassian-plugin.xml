@@ -15,7 +15,7 @@
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <resource type="download" name="static/" location="/static"/>
-        <resource type="download" name="jquery.infinitescroll.min.js" location="/static/js/lib/jquery.infinitescroll.min.js"/>
+        <resource type="download" name="jquery.infinitescroll.js" location="/static/js/lib/jquery.infinitescroll.js"/>
 
         <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
     </web-resource>

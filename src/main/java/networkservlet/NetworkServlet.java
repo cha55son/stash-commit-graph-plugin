@@ -107,7 +107,8 @@ public class NetworkServlet extends HttpServlet {
         render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
             "repository", repository,
             "changesetPage", changesetPage,
-            "page", page
+            "limit", limit,
+            "page", (page + 1)
         ));
     }
 

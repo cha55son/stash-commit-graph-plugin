@@ -4,6 +4,7 @@
  * @param repository Repository
  * @param changesetPage Page<Changeset>
  * @param page <Integer>
+ * @param limit <Integer>
  */
 {template .network}
 {webResourceManager_requireResourcesForContext('stash.plugin.network')}
@@ -38,9 +39,13 @@
                             {param repository: $repository /}
                             {param changesetPage: $changesetPage /}
                             {param page: $page /}
+                            {param limit: $limit /}
                         {/call}
                     </tbody>
                 </table>
+                <div class="loading-indicator">
+                    <div class="spinner">
+                </div>
             </td>
         </tbody>
     </table>
@@ -49,26 +54,33 @@
 {/template}
 
 /**
- * @param repository
- * @param changesetPage
- * @param page
+ * @param repository Repository
+ * @param changesetPage Page<Changeset>
+ * @param page <Integer>
+ * @param limit <Integer>
  */
 {template .network_fragment}
-    <script>
-        require('plugin/commitgraph').applyChangesets([
-            {foreach $changeset in $changesetPage.values}
-                {lb}
-                    id: '{$changeset.id}',
-                    parents: [
-                        {foreach $parentChangeset in $changeset.parents}
-                            '{$parentChangeset.id}'
-                            {if isLast($parentChangeset) == false},{/if}
+    {if $changesetPage.size > 0}
+        <tr class="commit-row" style="display: none">
+            <td colspan="5">
+                <commitgraph-javascript>
+                    require('plugin/commitgraph').applyChangesets([
+                        {foreach $changeset in $changesetPage.values}
+                            {lb}
+                                id: '{$changeset.id}',
+                                parents: [
+                                    {foreach $parentChangeset in $changeset.parents}
+                                        '{$parentChangeset.id}'
+                                        {if isLast($parentChangeset) == false},{/if}
+                                    {/foreach}
+                                ]
+                            {rb}{if isLast($changeset) == false},{/if}
                         {/foreach}
-                    ]
-                {rb}{if isLast($changeset) == false},{/if}
-            {/foreach}
-        ]);
-    </script>
+                    ]);
+                </commitgraph-javascript>
+            </td>
+        </tr>
+    {/if}
     {foreach $changeset in $changesetPage.values}
         <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
             <td class="author">
@@ -113,11 +125,14 @@
             </td>
         </tr>
     {/foreach}
-    <tr>
-        <td><a class="scroll-next" href="?page={$page + 1}&contentsOnly=true">Next Page</a></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+    <tr class="infinitescroll-nav">
+        <td colspan="5" class="nav-links">
+            {if $page > 1}
+                <a class="scroll-nav scroll-prev" href="?page={$page - 1}">&larr; Prev</a>
+            {/if}
+            {if $changesetPage.size >= $limit}
+                <a class="scroll-nav scroll-next" href="?page={$page + 1}">Next &rarr;</a>
+            {/if}
+        </td>
     </tr>
 {/template}
