@@ -5,6 +5,19 @@ define("plugin/commitgraph/graph", [
     var isEmpty = function(val) { return typeof val === 'undefined'; };
     // Determine the different branches(lanes) for each commits and
     // how to draw the lines between them.
+    /*
+    * node = [sha1, dotData, routeData, labelData]
+    * sha1 (string) The sha1 for the commit
+    * dotData (array) [0]: Branch
+    *                 [1]: Dot color
+    *                 [2]: commit link
+    * routeData (array) May contain many different routes.
+    *                 [x][0]: From branch
+    *                 [x][1]: To branch
+    *                 [x][2]: Route color
+    * labelData (array) Tags to be added to the graph.
+    *                 [0]: { display: '...', href: '...' }
+    */
     var parseGraph = function(commits) {
         var nodes = [];
         var branchCnt = 0;
@@ -67,12 +80,9 @@ define("plugin/commitgraph/graph", [
         }
         return nodes;
     };
-    exports.parseCommits = function($graph, commits, $els) {
-        var cells = $els;
-        var cellHeight = $els.eq(0).outerHeight();
+    exports.parseCommits = function($graph, commits, cellHeight) {
         var dotRadius = 4;
         $graph.commitgraph({
-            orientation: 'vertical',
             data: parseGraph(commits),
             padding: (cellHeight / 2) - dotRadius,
             yStep: cellHeight,
@@ -80,8 +90,6 @@ define("plugin/commitgraph/graph", [
             lineWidth: 2,
             finished: function(graph) {
                 // var box = graph.objects.getBBox();
-                // width = Math.min(box.width + 10, $parent.width() * 0.5);
-                // self.els.$graphBox.width(width);
                 // if (box.width > width)
                 // self.els.$graphBox.css('overflow-x', 'scroll');
                 // $('.commit-container').css('padding-left', width);

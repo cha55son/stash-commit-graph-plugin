@@ -8,6 +8,8 @@ import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
 import com.atlassian.stash.commit.CommitService;
 import com.atlassian.plugin.webresource.WebResourceManager;
+import com.atlassian.stash.exception.NoSuchEntityException;
+
 
 import com.atlassian.stash.commit.graph.*;
 import com.google.common.collect.ImmutableMap;
@@ -76,23 +78,18 @@ public class NetworkServlet extends HttpServlet {
             @Override
             public void onStart(TraversalContext context) {
                 this.counter = 0;
-                System.out.println("Offset: " + offset);
-                System.out.println("Limit: " + limit);
             }
             @Override
             public TraversalStatus onNode(CommitGraphNode node) {
-                Changeset changeset = commitService.getChangeset(repository, node.getCommit().getId());
                 Boolean captured = false;
-                // If the counter falls between offset and (limit + offset) store it in the array.
                 if (counter >= offset && counter < (offset + limit)) {
-                    changesets.add(changeset);
+                    changesets.add(commitService.getChangeset(repository, node.getCommit().getId()));
                     captured = true;
                 } else if (counter >= (offset + limit)) {
                     return TraversalStatus.FINISH;
                 }
-                System.out.println("[" + counter.toString() + "]: " + changeset.getId() + (captured ? " captured" : ""));
                 // If there are no parents then we are at the root node.
-                if (changeset.getParents().size() > 0) {
+                if (node.getParents().size() > 0) {
                     counter++;
                     return TraversalStatus.CONTINUE;
                 } else {

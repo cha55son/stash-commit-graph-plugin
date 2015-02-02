@@ -3,15 +3,15 @@ define("plugin/commitgraph/network", [
     'jquery',
     'plugin/commitgraph/graph'
 ], function(exports, $, Graph) {
+    var allChangesets = [];
     // Call this function to append changesets to the graph.
     exports.applyChangesets = function(changesets) {
         if (changesets.length == 0) return;
+        allChangesets = allChangesets.concat(changesets);
         var $els = $('.commit-row:not(.parsed)');
-        // Create a new graph container for this round of commits
-        var $container = $('<div class="graph-segment"></div>').appendTo('.commit-graph .graph-body')
-                                                               .height(changesets.length * $els.eq(0).outerHeight());
-        Graph.parseCommits($container, changesets, $els);
-        $els.addClass('parsed');
+        var $container = $('.commit-graph .graph-body');
+        $container.children().remove();
+        Graph.parseCommits($container, allChangesets, $els.eq(0).outerHeight());
     };
 });
 
@@ -45,7 +45,6 @@ define("plugin/commitgraph/network", [
                     $loader.hide();
                 }
             },
-            bufferPx: 200,
             errorCallback: function() {
                 $loader.spinStop().children().remove();
                 $loader.html('No more history');

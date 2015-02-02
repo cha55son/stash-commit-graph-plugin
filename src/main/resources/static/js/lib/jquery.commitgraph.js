@@ -2,8 +2,6 @@
     function Graph(element, options) {
         var defaults = {
             padding: 0,
-            height: 800,
-            width: 200,
             yStep: 20,
             xStep: 15,
             dotRadius: 3,
@@ -21,68 +19,88 @@
 
     Graph.prototype.buildGraph = function() {
         var self = this;
-        this.paper = Raphael(this.$el[0], this.$el.width(), this.$el.height());
+        // To find the width we can loop and find the deepest branch.
+        var deepestBranch = 0;
+        $.each(this.data, function(i, point) {
+            if (point[1][0] > deepestBranch) deepestBranch = point[1][0];
+        });
+        this.options.width = deepestBranch * this.options.xStep + (this.options.padding * 2);
+        this.options.height = this.data.length * this.options.yStep;
+        this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
         this.objects = this.paper.set();
 
-        // $.each(this.data, function(i, point) {
-        //     var routes = self.drawRoutes(point, i);
-        //     $.each(routes, function(i, route) { self.objects.push(route); });
-        //     self.objects.push(self.drawDot(point, i));
-        //     self.objects.push(self.drawLabels(point, i));
-        // });
+        $.each(this.data, function(i, point) {
+            self.objects.push(self.drawRow(point, i));
+            var routes = self.drawRoutes(point, i);
+            $.each(routes, function(i, route) { self.objects.push(route); });
+            self.objects.push(self.drawDot(point, i));
+            // self.objects.push(self.drawLabels(point, i));
+        });
     };
 
-    // Graph.prototype.drawDot = function(point, yStep) {
-    //     var dot = this.paper
-    //         .circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
-    //         .attr({
-    //             fill: this.getColor(point[1][1]),
-    //             'stroke-width': 0,
-    //             cursor: 'pointer'
-    //         });
-    //     dot.hover(function() {
-    //         dot.animate({ transform: 'S 1.5 1.5' }, 50);
-    //     }, function() {
-    //         dot.animate({ transform: 'S 1 1' }, 50);
-    //     });
-    //     dot.click(function() {
-    //         window.open(point[1][2]);
-    //     });
-    //     return dot;
-    // };
+    Graph.prototype.drawRow = function(point, yStep) {
+        var box = this.paper
+            .rect(0,
+                this.getYPos(yStep) - (this.options.yStep/2),
+                this.options.width,
+                this.options.yStep)
+            .attr({ fill: '#EEE', 'fill-opacity': 0, stroke: 'none' })
+            .toBack();
+        box.hover(function() {
+            box.attr({ 'fill-opacity': 1 });
+        }, function() {
+            box.attr({ 'fill-opacity': 0 });
+        });
+        return box;
+    };
 
-    // Graph.prototype.drawRoutes = function(point, yStep) {
-    //     // Loop over the routes in reverse so the
-    //     // lines lay on top of each other properly.
-    //     var quarterXStep = this.options.xStep / 4;
-    //     var twoThirdYStep = this.options.yStep / 3 * 2;
-    //     var fromY = this.getYPos(yStep);
-    //     var toY = this.getYPos(yStep + 1);
-    //     var routes = [];
+    Graph.prototype.drawDot = function(point, yStep) {
+        var dot = this.paper
+            .circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
+            .attr({
+                fill: this.getColor(point[1][1]),
+                'stroke-width': 0
+            });
+        dot.hover(function() {
+            dot.animate({ transform: 'S 1.5 1.5' }, 50);
+        }, function() {
+            dot.animate({ transform: 'S 1 1' }, 50);
+        });
+        return dot;
+    };
 
-    //     for (var i = point[2].length - 1; i >= 0; i--) {
-    //         var route = point[2][i];
-    //         var fromX = this.getXPos(route[0]);
-    //         var toX = this.getXPos(route[1]);
-    //         var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
-    //         var moveArr = ['M', fromX, fromY];
+    Graph.prototype.drawRoutes = function(point, yStep) {
+        // Loop over the routes in reverse so the
+        // lines lay on top of each other properly.
+        var quarterXStep = this.options.xStep / 4;
+        var twoThirdYStep = this.options.yStep / 3 * 2;
+        var fromY = this.getYPos(yStep);
+        var toY = this.getYPos(yStep + 1);
+        var routes = [];
 
-    //         var path = null;
-    //         if (fromX === toX) {
-    //             path = this.paper.path(moveArr.concat([
-    //                 'L', toX, toY
-    //             ])).attr(pathOptions);
-    //         } else {
-    //             path = this.paper.path(moveArr.concat([
-    //                 'C', fromX - quarterXStep, fromY + twoThirdYStep,
-    //                     toX + quarterXStep, toY - twoThirdYStep,
-    //                     toX, toY
-    //             ])).attr(pathOptions);
-    //         }
-    //         routes.push(path);
-    //     }
-    //     return routes;
-    // };
+        for (var i = point[2].length - 1; i >= 0; i--) {
+            var route = point[2][i];
+            var fromX = this.getXPos(route[0]);
+            var toX = this.getXPos(route[1]);
+            var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
+            var moveArr = ['M', fromX, fromY];
+
+            var path = null;
+            if (fromX === toX) {
+                path = this.paper.path(moveArr.concat([
+                    'L', toX, toY
+                ])).attr(pathOptions);
+            } else {
+                path = this.paper.path(moveArr.concat([
+                    'C', fromX - quarterXStep, fromY + twoThirdYStep,
+                        toX + quarterXStep, toY - twoThirdYStep,
+                        toX, toY
+                ])).attr(pathOptions);
+            }
+            routes.push(path);
+        }
+        return routes;
+    };
 
     // Graph.prototype.drawLabels = function(point, yStep) {
     //     var branchObjs = point[3];
@@ -185,24 +203,24 @@
     //     return label;
     // };
 
-    // Graph.prototype.getYPos = function(level) {
-    //     return (this.options.yStep * level) + this.options.padding + this.options.dotRadius;
-    // };
+    Graph.prototype.getYPos = function(level) {
+        return (this.options.yStep * level) + this.options.padding + this.options.dotRadius;
+    };
 
-    // Graph.prototype.getXPos = function(branch) {
-    //     return this.options.width - (this.options.xStep * branch) - this.options.padding - this.options.dotRadius;
-    // };
+    Graph.prototype.getXPos = function(branch) {
+        return this.options.width - (this.options.xStep * branch) - this.options.padding - this.options.dotRadius;
+    };
 
-    // Graph.prototype.getColor = function(branch) {
-    //     return this.colors[branch % this.colors.length];
-    // };
+    Graph.prototype.getColor = function(branch) {
+        return this.colors[branch % this.colors.length];
+    };
 
-    // Graph.prototype.colors = [
-    //     "#e11d21", "#fbca04", "#009800", "#006b75", "#207de5",
-    //     "#0052cc", "#5319e7", "#f7c6c7", "#fad8c7", "#fef2c0",
-    //     "#bfe5bf", "#c7def8", "#bfdadc", "#bfd4f2", "#d4c5f9",
-    //     "#cccccc", "#84b6eb", "#e6e6e6", "#cc317c"
-    // ];
+    Graph.prototype.colors = [
+        "#e11d21", "#fbca04", "#009800", "#006b75", "#207de5",
+        "#0052cc", "#5319e7", "#f7c6c7", "#fad8c7", "#fef2c0",
+        "#bfe5bf", "#c7def8", "#bfdadc", "#bfd4f2", "#d4c5f9",
+        "#cccccc", "#84b6eb", "#e6e6e6", "#cc317c"
+    ];
 
     $.fn.commitgraph = function(options) {
         return this.each(function() {
