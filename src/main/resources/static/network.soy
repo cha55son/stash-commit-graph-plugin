@@ -3,6 +3,7 @@
 /**
  * @param repository Repository
  * @param changesetPage Page<Changeset>
+ * @param labels ArrayList<String>
  * @param page <Integer>
  * @param limit <Integer>
  */
@@ -36,6 +37,7 @@
                         {call .network_fragment}
                             {param repository: $repository /}
                             {param changesetPage: $changesetPage /}
+                            {param labels: $labels /}
                             {param page: $page /}
                             {param limit: $limit /}
                         {/call}
@@ -54,6 +56,7 @@
 /**
  * @param repository Repository
  * @param changesetPage Page<Changeset>
+ * @param labels ArrayList<String>
  * @param page <Integer>
  * @param limit <Integer>
  */
@@ -116,6 +119,14 @@
                         {foreach $changeset in $changesetPage.values}
                             {lb}
                                 id: '{$changeset.id}',
+                                {if $labels[$changeset.id]}
+                                    labels: [
+                                        {foreach $label in $labels[$changeset.id]}
+                                            '{$label}',
+                                            {if isLast($label) == false},{/if}
+                                        {/foreach}
+                                    ],
+                                {/if}
                                 parents: [
                                     {foreach $parentChangeset in $changeset.parents}
                                         {lb} id: '{$parentChangeset.id}' {rb}

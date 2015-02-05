@@ -4,19 +4,17 @@ import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 
 import com.atlassian.stash.content.Changeset;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.repository.RepositoryService;
+import com.atlassian.stash.repository.*;
 import com.atlassian.stash.commit.CommitService;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.stash.exception.NoSuchEntityException;
 
-
 import com.atlassian.stash.commit.graph.*;
+import com.atlassian.stash.util.PageRequest;
 import com.google.common.collect.ImmutableMap;
 import com.atlassian.stash.util.PageUtils;
 import com.atlassian.stash.util.Page;
 
-import org.apache.xpath.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 public class NetworkServlet extends HttpServlet {
@@ -35,16 +34,19 @@ public class NetworkServlet extends HttpServlet {
     static final String NETWORK_PAGE_FRAGMENT = "stash.plugin.network_fragment";
 
     private final RepositoryService repositoryService;
+    private final RepositoryMetadataService repositoryMetadataService;
     private final SoyTemplateRenderer soyTemplateRenderer;
     private final CommitService commitService;
     private final WebResourceManager webResourceManager;
 
     public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
                           RepositoryService repositoryService,
+                          RepositoryMetadataService repositoryMetadataService,
                           CommitService commitService,
                           WebResourceManager webResourceManager) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
+        this.repositoryMetadataService = repositoryMetadataService;
         this.commitService = commitService;
         this.webResourceManager = webResourceManager;
     }
@@ -70,9 +72,65 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
 
+        Page<Branch> branches = this.getBranches(repository);
+        Page<? extends Tag> tags = this.getTags(repository);
+        Page<Changeset> changesets = this.getChangesets(repository, limit, offset);
+        Map<String, ArrayList<String>> labels = consolidateLabels(branches, tags);
+
+        webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
+        render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
+            "repository", repository,
+            "changesetPage", changesets,
+            "labels", labels,
+            "limit", limit,
+            "page", (page + 1)
+        ));
+    }
+
+    protected Map<String, ArrayList<String>> consolidateLabels(Page<Branch> branches, Page<? extends Tag> tags) {
+        // Consolidate labels (branches/tags) into a map of <commitId>: [<labelName>,...] pairs.
+        Map<String, ArrayList<String>> labels = new HashMap<String, ArrayList<String>>();
+        for (Branch branch : branches.getValues()) {
+            if (labels.get(branch.getLatestChangeset()) == null) {
+                labels.put(branch.getLatestChangeset(), new ArrayList<String>());
+            }
+            labels.get(branch.getLatestChangeset()).add(branch.getDisplayId());
+        }
+        for (Tag tag : tags.getValues()) {
+            if (labels.get(tag.getLatestChangeset()) == null) {
+                labels.put(tag.getLatestChangeset(), new ArrayList<String>());
+            }
+            labels.get(tag.getLatestChangeset()).add(tag.getDisplayId());
+        }
+        return labels;
+    }
+
+    protected Page<? extends Tag> getTags(Repository repository) {
+        long startTime = System.currentTimeMillis();
+        // Let's just limit to 100 for now.
+        PageRequest pageRequest = PageUtils.newRequest(0, 100);
+        Page<? extends Tag> tags = repositoryMetadataService.getTags(repository, pageRequest, "", null);
+        System.out.println("    Tag listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+        return tags;
+    }
+
+    protected Page<Branch> getBranches(Repository repository) {
+        long startTime = System.currentTimeMillis();
+        // Let's just limit to 100 for now.
+        PageRequest pageRequest = PageUtils.newRequest(0, 100);
+        RepositoryBranchesRequest branchRequest = new RepositoryBranchesRequest.Builder()
+                                                                         .repository(repository)
+                                                                         .build();
+        Page<Branch> branches = repositoryMetadataService.getBranches(branchRequest, pageRequest);
+        System.out.println(" Branch listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+        return branches;
+    }
+
+    protected Page<Changeset> getChangesets(final Repository repository, final Integer limit, final Integer offset) {
         final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
         TraversalRequest request = new TraversalRequest.Builder().repository(repository).build();
         final Integer counter = 0;
+        long startTime = System.currentTimeMillis();
         commitService.traverse(request, new TraversalCallback() {
             private Integer counter;
             @Override
@@ -97,16 +155,9 @@ public class NetworkServlet extends HttpServlet {
                 }
             }
         });
+        System.out.println("Graph traversal time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
         // Convert the arraylist to a page
-        Page<Changeset> changesetPage = PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
-
-        webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
-        render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
-            "repository", repository,
-            "changesetPage", changesetPage,
-            "limit", limit,
-            "page", (page + 1)
-        ));
+        return PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
     }
 
     protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {

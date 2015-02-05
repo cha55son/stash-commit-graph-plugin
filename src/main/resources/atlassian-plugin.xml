@@ -15,8 +15,6 @@
     <!-- add our web resources -->
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <resource type="download" name="static/" location="/static"/>
-
-        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
     </web-resource>
 
     <!-- publish our component -->

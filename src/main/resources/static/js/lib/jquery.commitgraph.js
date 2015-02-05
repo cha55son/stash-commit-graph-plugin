@@ -7,7 +7,6 @@
             dotRadius: 3,
             lineWidth: 2,
             data: [],
-            debug: false,
             finished: function(graph) { }
         };
         this.$el = $(element);
