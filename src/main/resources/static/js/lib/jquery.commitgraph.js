@@ -21,19 +21,21 @@
         // To find the width we can loop and find the deepest branch.
         var deepestBranch = 0;
         $.each(this.data, function(i, point) {
-            if (point[1][0] > deepestBranch) deepestBranch = point[1][0];
+            if (point.dotOffset > deepestBranch) deepestBranch = point.dotOffset;
         });
-        this.options.width = deepestBranch * this.options.xStep + (this.options.padding * 2);
+        // Magic 100 to account for routes crossing multi branches causing a buldge in the route.
+        this.options.width = deepestBranch * this.options.xStep + (this.options.padding * 2) + 100; 
         this.options.height = this.data.length * this.options.yStep;
         this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
         this.objects = this.paper.set();
 
         $.each(this.data, function(i, point) {
-            self.objects.push(self.drawRow(point, i));
+            // Don't add rows since it will mess up the bounding box.
+            self.drawRow(point, i);
             var routes = self.drawRoutes(point, i);
             $.each(routes, function(i, route) { self.objects.push(route); });
             self.objects.push(self.drawDot(point, i));
-            // self.objects.push(self.drawLabels(point, i));
+            self.objects.push(self.drawLabels(point, i));
         });
     };
 
@@ -55,9 +57,9 @@
 
     Graph.prototype.drawDot = function(point, yStep) {
         var dot = this.paper
-            .circle(this.getXPos(point[1][0]), this.getYPos(yStep), this.options.dotRadius)
+            .circle(this.getXPos(point.dotOffset), this.getYPos(yStep), this.options.dotRadius)
             .attr({
-                fill: this.getColor(point[1][1]),
+                fill: this.getColor(point.dotColor),
                 'stroke-width': 0
             });
         dot.hover(function() {
@@ -77,11 +79,11 @@
         var toY = this.getYPos(yStep + 1);
         var routes = [];
 
-        for (var i = point[2].length - 1; i >= 0; i--) {
-            var route = point[2][i];
-            var fromX = this.getXPos(route[0]);
-            var toX = this.getXPos(route[1]);
-            var pathOptions = { stroke: this.getColor(route[2]), 'stroke-width': this.options.lineWidth };
+        for (var i = point.routes.length - 1; i >= 0; i--) {
+            var route = point.routes[i];
+            var fromX = this.getXPos(route.from);
+            var toX = this.getXPos(route.to);
+            var pathOptions = { stroke: this.getColor(route.color), 'stroke-width': this.options.lineWidth };
             var moveArr = ['M', fromX, fromY];
 
             var path = null;
@@ -101,106 +103,103 @@
         return routes;
     };
 
-    // Graph.prototype.drawLabels = function(point, yStep) {
-    //     var branchObjs = point[3];
-    //     if (branchObjs.length === 0) return;
-    //     var xStep = point[1][0];
-    //     var triSize = 10;
-    //     var semiTriSize = triSize / 3 * 2;
-    //     var commitPadding = 5;
-    //     var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
-    //     var yPos = this.getYPos(yStep);
-    //     var color = 'rgba(51, 51, 51, 80)';
-    //     var singleBranch = branchObjs.length === 1;
+    Graph.prototype.drawLabels = function(point, yStep) {
+        if (point.labels.length === 0) return;
+        var xStep = point.dotOffset;
+        var triSize = 10;
+        var semiTriSize = triSize / 3 * 2;
+        var commitPadding = 5;
+        var xPos = this.getXPos(xStep) - this.options.dotRadius - 5;
+        var yPos = this.getYPos(yStep);
+        var color = 'rgba(51, 51, 51, 80)';
 
-    //     this.paper.setStart();
-    //         // Draw tooltip triangle
-    //         var triXPos = xPos - semiTriSize;
-    //         var tri = this.paper.path([
-    //             'M', triXPos, yPos - (triSize / 2),
-    //             'L', xPos, yPos,
-    //             'L', xPos - semiTriSize, yPos + (triSize / 2),
-    //             'L', triXPos, yPos - triSize
-    //         ]).attr({ fill: color, stroke: 'none' });
-    //         var labelText = '•••';
-    //         if (singleBranch) labelText = branchObjs[0].display;
-    //         var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer' };
-    //         // Draw the label text
-    //         var text = this.paper.text(0, 0, labelText).attr(textAttrs);
-    //         var textBox = text.getBBox();
-    //         var textPadding = 3, LRPadding = 3;
-    //         // Draw the label box
-    //         var box = this.paper
-    //             .rect(triXPos - textBox.width - textPadding * 2 - LRPadding * 2,
-    //                 yPos - (textBox.height / 2) - textPadding,
-    //                 textBox.width + textPadding * 2 + LRPadding * 2,
-    //                 textBox.height + textPadding * 2)
-    //             .attr({ fill: color, stroke: 'none' });
-    //         // Move the text back into place
-    //         text.attr({
-    //             x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding,
-    //             y: box.getBBox().y + box.getBBox().height / 2
-    //         }).toFront();
-    //         box._oldBBox = box.getBBox();
-    //     var label = this.paper.setFinish();
+        this.paper.setStart();
+            // Draw tooltip triangle
+            var triXPos = xPos - semiTriSize;
+            var tri = this.paper.path([
+                'M', triXPos, yPos - (triSize / 2),
+                'L', xPos, yPos,
+                'L', xPos - semiTriSize, yPos + (triSize / 2),
+                'L', triXPos, yPos - triSize
+            ]).attr({ fill: color, stroke: 'none' });
+            var labelText = point.labels.join(', ');
+            var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer' };
+            // Draw the label text
+            var text = this.paper.text(0, 0, labelText).attr(textAttrs);
+            var textBox = text.getBBox();
+            var textPadding = 3, LRPadding = 3;
+            // Draw the label box
+            var box = this.paper
+                .rect(triXPos - textBox.width - textPadding * 2 - LRPadding * 2,
+                    yPos - (textBox.height / 2) - textPadding,
+                    textBox.width + textPadding * 2 + LRPadding * 2,
+                    textBox.height + textPadding * 2)
+                .attr({ fill: color, stroke: 'none' });
+            // Move the text back into place
+            text.attr({
+                x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding,
+                y: box.getBBox().y + box.getBBox().height / 2
+            }).toFront();
+            box._oldBBox = box.getBBox();
+        var label = this.paper.setFinish();
 
-    //     var self = this;
-    //     var createTextAndHover = function(branch, x, y) {
-    //         var aText = self.paper.text(x, y, branch.display).attr(textAttrs).attr({ 'text-anchor': 'start', fill: '#333' });
-    //         aText.attr({ y: aText.getBBox().y + aText.getBBox().height });
-    //         aText.hover(function() {
-    //             aText.attr({ 'font-weight': 'bold' });
-    //         }, function() {
-    //             aText.attr({ 'font-weight': 'normal' });
-    //         });
-    //         aText.click(function() {
-    //             window.open(branch.href);
-    //         });
-    //         return aText;
-    //     };
+        // var self = this;
+        // var createTextAndHover = function(branch, x, y) {
+        //     var aText = self.paper.text(x, y, branch.display).attr(textAttrs).attr({ 'text-anchor': 'start', fill: '#333' });
+        //     aText.attr({ y: aText.getBBox().y + aText.getBBox().height });
+        //     aText.hover(function() {
+        //         aText.attr({ 'font-weight': 'bold' });
+        //     }, function() {
+        //         aText.attr({ 'font-weight': 'normal' });
+        //     });
+        //     aText.click(function() {
+        //         window.open(branch.href);
+        //     });
+        //     return aText;
+        // };
 
-    //     if (!singleBranch) {
-    //         var rightXPos = text.getBBox().x + text.getBBox().width;
-    //         var yPos = text.getBBox().y;
-    //         this.paper.setStart();
-    //         for (var i = 0; i < branchObjs.length; i++) {
-    //             var branchObj = branchObjs[i];
-    //             var aText = createTextAndHover(branchObj, rightXPos, yPos);
-    //             yPos += aText.getBBox().height;
-    //         }
-    //         label._branchList = this.paper.setFinish();
-    //         label.push(label._branchList);
-    //         label._branchList.hide();
-    //     }
+        // if (!singleBranch) {
+        //     var rightXPos = text.getBBox().x + text.getBBox().width;
+        //     var yPos = text.getBBox().y;
+        //     this.paper.setStart();
+        //     for (var i = 0; i < branchObjs.length; i++) {
+        //         var branchObj = branchObjs[i];
+        //         var aText = createTextAndHover(branchObj, rightXPos, yPos);
+        //         yPos += aText.getBBox().height;
+        //     }
+        //     label._branchList = this.paper.setFinish();
+        //     label.push(label._branchList);
+        //     label._branchList.hide();
+        // }
 
-    //     // Setup label event handlers
-    //     label.hoverset(this.paper, function() {
-    //         label.toFront();
-    //         var attrs = { fill: 'rgba(150, 150, 150, 255)' };
-    //         box.attr(attrs);
-    //         tri.attr(attrs);
-    //         text.attr({ fill: '#333' }).toFront();
-    //         if (singleBranch) return;
-    //         text.hide();
-    //         label._branchList.show();
-    //         box.attr({
-    //             x: label.getBBox().x - textPadding - LRPadding,
-    //             width: label.getBBox().width,
-    //             height: label.getBBox().height + textPadding
-    //         });
-    //     }, function() {
-    //         var attrs = { fill: color };
-    //         box.attr(attrs);
-    //         tri.attr(attrs);
-    //         text.attr({ fill: '#FFF' });
-    //         text.show();
-    //         box.attr(box._oldBBox);
-    //         if (singleBranch) return;
-    //         label._branchList.hide();
-    //     });
-    //     label.click(function() { if (singleBranch) window.open(branchObjs[0].href); });
-    //     return label;
-    // };
+        // // Setup label event handlers
+        // label.hoverset(this.paper, function() {
+        //     label.toFront();
+        //     var attrs = { fill: 'rgba(150, 150, 150, 255)' };
+        //     box.attr(attrs);
+        //     tri.attr(attrs);
+        //     text.attr({ fill: '#333' }).toFront();
+        //     if (singleBranch) return;
+        //     text.hide();
+        //     label._branchList.show();
+        //     box.attr({
+        //         x: label.getBBox().x - textPadding - LRPadding,
+        //         width: label.getBBox().width,
+        //         height: label.getBBox().height + textPadding
+        //     });
+        // }, function() {
+        //     var attrs = { fill: color };
+        //     box.attr(attrs);
+        //     tri.attr(attrs);
+        //     text.attr({ fill: '#FFF' });
+        //     text.show();
+        //     box.attr(box._oldBBox);
+        //     if (singleBranch) return;
+        //     label._branchList.hide();
+        // });
+        // label.click(function() { if (singleBranch) window.open(branchObjs[0].href); });
+        return label;
+    };
 
     Graph.prototype.getYPos = function(level) {
         return (this.options.yStep * level) + this.options.padding + this.options.dotRadius;

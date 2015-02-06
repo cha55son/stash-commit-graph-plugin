@@ -12,7 +12,21 @@
             font-weight: bold;
         }
         .graph-body {
-            text-align: right;
+
+            .wrap-stopper {
+                overflow: auto;
+                zoom: 1;
+
+                .graph-segment {
+                    text-align: right;
+                    overflow: hidden;
+                    float: right;
+
+                    svg {
+                        float: right;
+                    }
+                }
+            }
         }
     }
     .commits {
