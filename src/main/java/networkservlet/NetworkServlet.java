@@ -110,7 +110,7 @@ public class NetworkServlet extends HttpServlet {
         // Let's just limit to 100 for now.
         PageRequest pageRequest = PageUtils.newRequest(0, 100);
         Page<? extends Tag> tags = repositoryMetadataService.getTags(repository, pageRequest, "", null);
-        System.out.println("    Tag listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+        // System.out.println("    Tag listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
         return tags;
     }
 
@@ -122,7 +122,7 @@ public class NetworkServlet extends HttpServlet {
                                                                          .repository(repository)
                                                                          .build();
         Page<Branch> branches = repositoryMetadataService.getBranches(branchRequest, pageRequest);
-        System.out.println(" Branch listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+        // System.out.println(" Branch listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
         return branches;
     }
 
@@ -155,7 +155,7 @@ public class NetworkServlet extends HttpServlet {
                 }
             }
         });
-        System.out.println("Graph traversal time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+        // System.out.println("Graph traversal time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
         // Convert the arraylist to a page
         return PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
     }

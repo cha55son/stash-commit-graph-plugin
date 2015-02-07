@@ -24,8 +24,13 @@
             if (point.dotOffset > deepestBranch) deepestBranch = point.dotOffset;
         });
         // Magic 100 to account for routes crossing multi branches causing a buldge in the route.
-        this.options.width = deepestBranch * this.options.xStep + (this.options.padding * 2) + 100; 
+        this.options.width = Math.max(1000, deepestBranch * this.options.xStep + (this.options.padding * 2) + 100);
         this.options.height = this.data.length * this.options.yStep;
+        // If the last changeset has parents extend the svg by
+        // another half cell.
+        if (this.data[this.data.length - 1].commitParents > 0) {
+            this.options.height += this.options.yStep / 2; 
+        }
         this.paper = Raphael(this.$el[0], this.options.width, this.options.height);
         this.objects = this.paper.set();
 
@@ -45,10 +50,10 @@
                 this.getYPos(yStep) - (this.options.yStep/2),
                 this.options.width,
                 this.options.yStep)
-            .attr({ fill: '#EEE', 'fill-opacity': 0, stroke: 'none' })
+            .attr({ fill: '#DDD', 'fill-opacity': 0, stroke: 'none' })
             .toBack();
         box.hover(function() {
-            box.attr({ 'fill-opacity': 1 });
+            box.attr({ 'fill-opacity': 0.50 });
         }, function() {
             box.attr({ 'fill-opacity': 0 });
         });
@@ -126,12 +131,13 @@
                 'L', xPos - semiTriSize, yPos + (triSize / 2),
                 'L', triXPos, yPos - triSize
             ]).attr({ fill: color, stroke: 'none' });
-            var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer', 'text-anchor': 'start' };
+            var textAttrs = { fill: '#FFF', font: '11px monospace', 'text-anchor': 'start' };
+            var labelAttrs = $.extend({ cursor: 'pointer' }, textAttrs);
             // Create the labels and link to their respective pages
             var labels = this.paper.set();
             var startX = 0;
             for (var i = 0; i < point.labels.length; i++) {
-                var text = this.paper.text(startX, 0, point.labels[i].name).attr(textAttrs);
+                var text = this.paper.text(startX, 0, point.labels[i].name).attr(labelAttrs);
                 startX += text.getBBox().width;
                 text._label = point.labels[i];
                 text.click(function() { window.open(this._label.href); });
@@ -153,10 +159,10 @@
                 .attr({ fill: color, stroke: 'none' });
             var labelBBox = labelBox.getBBox();
             // Move the text back into place
-            labels.attr({
-                x: labelBBox.x + textPadding + LRPadding,
-                y: labelBBox.y + labelBBox.height / 2
-            }).toFront();
+            labels.transform('T' + 
+                (labelBBox.x + textPadding + LRPadding) + ',' +
+                (labelBBox.y + labelBBox.height / 2)
+            ).toFront();
         var label = this.paper.setFinish();
 
         // var self = this;

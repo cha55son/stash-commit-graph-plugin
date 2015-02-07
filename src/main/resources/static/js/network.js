@@ -9,9 +9,13 @@ define("plugin/commitgraph/network", [
         var $els = $('.commit-row:not(.parsed)');
         var $container = $('.commit-graph .graph-body');
         // Create a new graph container for this round of commits
-        var $container = $('<div class="graph-segment"></div>').appendTo('.commit-graph .graph-body')
+        var $container = $('<div class="graph-segment"></div>').appendTo('.commit-graph .graph-body');
         $container.wrap('<div class="wrap-stopper"></div>');
         Graph.parseCommits($container, changesets, $els.eq(0).outerHeight());
+        // Subsequent graph segments need to be moved up half a cell
+        // so the graph looks correct.
+        if ($('.commit-graph .graph-body .graph-segment').length >= 2)
+            $container.parent().css({ 'margin-top': -($els.eq(0).outerHeight() / 2) });
         $els.addClass('parsed');
     };
 });

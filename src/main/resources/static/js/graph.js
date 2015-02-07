@@ -54,6 +54,7 @@ define("plugin/commitgraph/graph", [
             nodes.push({
                 commitId: commit.id,
                 commitHref: commit.href,
+                commitParents: commit.parents.length,
                 dotOffset: offset,
                 dotColor: branch,
                 routes: routes,
@@ -75,7 +76,11 @@ define("plugin/commitgraph/graph", [
             finished: function(graph) {
                 var graphWidth = graph.objects.getBBox().width;
                 $graph.width(graphWidth + (cellHeight / 2 - dotRadius) * 2);
-                if (graphWidth > 400) $graph.css('overflow-x', 'scroll');
+                // Ensure all graph-segments are the same width.
+                var max = Math.max.apply(Math, $('.graph-segment').map(function() { return $(this).width(); }).get());
+                $('.graph-segment').each(function() {
+                    $(this).width(max); 
+                });
             }
         });
     };
