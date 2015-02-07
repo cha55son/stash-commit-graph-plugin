@@ -75,7 +75,7 @@ public class NetworkServlet extends HttpServlet {
         Page<Branch> branches = this.getBranches(repository);
         Page<? extends Tag> tags = this.getTags(repository);
         Page<Changeset> changesets = this.getChangesets(repository, limit, offset);
-        Map<String, ArrayList<String>> labels = consolidateLabels(branches, tags);
+        Map<String, ArrayList<Ref>> labels = consolidateLabels(branches, tags);
 
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
@@ -87,20 +87,20 @@ public class NetworkServlet extends HttpServlet {
         ));
     }
 
-    protected Map<String, ArrayList<String>> consolidateLabels(Page<Branch> branches, Page<? extends Tag> tags) {
+    protected Map<String, ArrayList<Ref>> consolidateLabels(Page<Branch> branches, Page<? extends Tag> tags) {
         // Consolidate labels (branches/tags) into a map of <commitId>: [<labelName>,...] pairs.
-        Map<String, ArrayList<String>> labels = new HashMap<String, ArrayList<String>>();
+        Map<String, ArrayList<Ref>> labels = new HashMap<String, ArrayList<Ref>>();
         for (Branch branch : branches.getValues()) {
             if (labels.get(branch.getLatestChangeset()) == null) {
-                labels.put(branch.getLatestChangeset(), new ArrayList<String>());
+                labels.put(branch.getLatestChangeset(), new ArrayList<Ref>());
             }
-            labels.get(branch.getLatestChangeset()).add(branch.getDisplayId());
+            labels.get(branch.getLatestChangeset()).add(branch);
         }
         for (Tag tag : tags.getValues()) {
             if (labels.get(tag.getLatestChangeset()) == null) {
-                labels.put(tag.getLatestChangeset(), new ArrayList<String>());
+                labels.put(tag.getLatestChangeset(), new ArrayList<Ref>());
             }
-            labels.get(tag.getLatestChangeset()).add(tag.getDisplayId());
+            labels.get(tag.getLatestChangeset()).add(tag);
         }
         return labels;
     }

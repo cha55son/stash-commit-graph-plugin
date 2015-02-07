@@ -60,12 +60,16 @@
             .circle(this.getXPos(point.dotOffset), this.getYPos(yStep), this.options.dotRadius)
             .attr({
                 fill: this.getColor(point.dotColor),
-                'stroke-width': 0
+                'stroke-width': 0,
+                cursor: 'pointer'
             });
         dot.hover(function() {
             dot.animate({ transform: 'S 1.5 1.5' }, 50);
         }, function() {
             dot.animate({ transform: 'S 1 1' }, 50);
+        });
+        dot.click(function() {
+            window.open(point.commitHref);
         });
         return dot;
     };
@@ -122,25 +126,37 @@
                 'L', xPos - semiTriSize, yPos + (triSize / 2),
                 'L', triXPos, yPos - triSize
             ]).attr({ fill: color, stroke: 'none' });
-            var labelText = point.labels.join(', ');
-            var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer' };
-            // Draw the label text
-            var text = this.paper.text(0, 0, labelText).attr(textAttrs);
-            var textBox = text.getBBox();
+            var textAttrs = { fill: '#FFF', font: '11px monospace', cursor: 'pointer', 'text-anchor': 'start' };
+            // Create the labels and link to their respective pages
+            var labels = this.paper.set();
+            var startX = 0;
+            for (var i = 0; i < point.labels.length; i++) {
+                var text = this.paper.text(startX, 0, point.labels[i].name).attr(textAttrs);
+                startX += text.getBBox().width;
+                text._label = point.labels[i];
+                text.click(function() { window.open(this._label.href); });
+                labels.push(text);
+                if (i < point.labels.length - 1) {
+                    var comma = this.paper.text(startX, 0, ', ').attr(textAttrs);
+                    startX += comma.getBBox().width;
+                    labels.push(comma);
+                }
+            }
+            var textBBox = labels.getBBox();
             var textPadding = 3, LRPadding = 3;
             // Draw the label box
-            var box = this.paper
-                .rect(triXPos - textBox.width - textPadding * 2 - LRPadding * 2,
-                    yPos - (textBox.height / 2) - textPadding,
-                    textBox.width + textPadding * 2 + LRPadding * 2,
-                    textBox.height + textPadding * 2)
+            var labelBox = this.paper
+                .rect(triXPos - textBBox.width - textPadding * 2 - LRPadding * 2,
+                    yPos - (textBBox.height / 2) - textPadding,
+                    textBBox.width + textPadding * 2 + LRPadding * 2,
+                    textBBox.height + textPadding * 2)
                 .attr({ fill: color, stroke: 'none' });
+            var labelBBox = labelBox.getBBox();
             // Move the text back into place
-            text.attr({
-                x: box.getBBox().x + textBox.width / 2 + textPadding + LRPadding,
-                y: box.getBBox().y + box.getBBox().height / 2
+            labels.attr({
+                x: labelBBox.x + textPadding + LRPadding,
+                y: labelBBox.y + labelBBox.height / 2
             }).toFront();
-            box._oldBBox = box.getBBox();
         var label = this.paper.setFinish();
 
         // var self = this;

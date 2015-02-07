@@ -53,6 +53,7 @@ define("plugin/commitgraph/graph", [
             }
             nodes.push({
                 commitId: commit.id,
+                commitHref: commit.href,
                 dotOffset: offset,
                 dotColor: branch,
                 routes: routes,
