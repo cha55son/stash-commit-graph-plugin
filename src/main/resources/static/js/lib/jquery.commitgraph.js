@@ -164,62 +164,6 @@
                 (labelBBox.y + labelBBox.height / 2)
             ).toFront();
         var label = this.paper.setFinish();
-
-        // var self = this;
-        // var createTextAndHover = function(branch, x, y) {
-        //     var aText = self.paper.text(x, y, branch.display).attr(textAttrs).attr({ 'text-anchor': 'start', fill: '#333' });
-        //     aText.attr({ y: aText.getBBox().y + aText.getBBox().height });
-        //     aText.hover(function() {
-        //         aText.attr({ 'font-weight': 'bold' });
-        //     }, function() {
-        //         aText.attr({ 'font-weight': 'normal' });
-        //     });
-        //     aText.click(function() {
-        //         window.open(branch.href);
-        //     });
-        //     return aText;
-        // };
-
-        // if (!singleBranch) {
-        //     var rightXPos = text.getBBox().x + text.getBBox().width;
-        //     var yPos = text.getBBox().y;
-        //     this.paper.setStart();
-        //     for (var i = 0; i < branchObjs.length; i++) {
-        //         var branchObj = branchObjs[i];
-        //         var aText = createTextAndHover(branchObj, rightXPos, yPos);
-        //         yPos += aText.getBBox().height;
-        //     }
-        //     label._branchList = this.paper.setFinish();
-        //     label.push(label._branchList);
-        //     label._branchList.hide();
-        // }
-
-        // // Setup label event handlers
-        // label.hoverset(this.paper, function() {
-        //     label.toFront();
-        //     var attrs = { fill: 'rgba(150, 150, 150, 255)' };
-        //     box.attr(attrs);
-        //     tri.attr(attrs);
-        //     text.attr({ fill: '#333' }).toFront();
-        //     if (singleBranch) return;
-        //     text.hide();
-        //     label._branchList.show();
-        //     box.attr({
-        //         x: label.getBBox().x - textPadding - LRPadding,
-        //         width: label.getBBox().width,
-        //         height: label.getBBox().height + textPadding
-        //     });
-        // }, function() {
-        //     var attrs = { fill: color };
-        //     box.attr(attrs);
-        //     tri.attr(attrs);
-        //     text.attr({ fill: '#FFF' });
-        //     text.show();
-        //     box.attr(box._oldBBox);
-        //     if (singleBranch) return;
-        //     label._branchList.hide();
-        // });
-        // label.click(function() { if (singleBranch) window.open(branchObjs[0].href); });
         return label;
     };
 
@@ -236,10 +180,10 @@
     };
 
     Graph.prototype.colors = [
-        "#e11d21", "#fbca04", "#009800", "#006b75", "#207de5",
-        "#0052cc", "#5319e7", "#f7c6c7", "#fad8c7", "#fef2c0",
-        "#bfe5bf", "#c7def8", "#bfdadc", "#bfd4f2", "#d4c5f9",
-        "#cccccc", "#84b6eb", "#e6e6e6", "#cc317c"
+        "#e11d21", "#fbca04", "#5319e7", "#cc317c", "#207de5",
+        "#0052cc", "#009800", "#486EB6", "#ECDA42", "#CF2027",
+        "#77C258", "#A5C33B", "#783695", "#DB7928", "#54958C",
+        "#83421B", "#84b6eb", "#7F7F7F", "#006b75"
     ];
 
     $.fn.commitgraph = function(options) {
