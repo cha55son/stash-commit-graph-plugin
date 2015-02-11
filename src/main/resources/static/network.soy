@@ -1,0 +1,148 @@
+{namespace stash.plugin}
+
+/**
+ * @param repository Repository
+ * @param changesetPage Page<Changeset>
+ * @param labels ArrayList<String>
+ * @param page <Integer>
+ * @param limit <Integer>
+ */
+{template .network}
+{webResourceManager_requireResourcesForContext('stash.plugin.network')}
+<html>
+<head>
+    <meta name="decorator" content="stash.repository.general">
+    <meta name="projectKey" content="{$repository.project.key}">
+    <meta name="repositorySlug" content="{$repository.slug}">
+    <meta name="activeTab" content="network-plugin-tab">
+    <title>{$repository.slug} / Network</title>
+</head>
+<body>
+    <h2 class="page-panel-content-header">Network</h2>
+    <table class="commit-graph-table">
+        <tbody>
+            <td class="commit-graph">
+                <div class="header-fill">&nbsp;</div>
+                <div class="graph-body"></div>
+            </td>
+            <td class="commits">
+                <table class="aui commits-table">
+                    <thead>
+                        <th class="author">Author</th>
+                        <th class="changeset">Commit</th>
+                        <th class="message">Message</th>
+                        <th class="comment-count"></th>
+                        <th class="timestamp">Commit Date</th>
+                    </thead>
+                    <tbody class="infinitescroll">
+                        {call .network_fragment}
+                            {param repository: $repository /}
+                            {param changesetPage: $changesetPage /}
+                            {param labels: $labels /}
+                            {param page: $page /}
+                            {param limit: $limit /}
+                        {/call}
+                    </tbody>
+                </table>
+            </td>
+        </tbody>
+    </table>
+    <div class="commitgraph-loading-indicator">
+        <div class="spinner">
+    </div>
+</body>
+</html>
+{/template}
+
+/**
+ * @param repository Repository
+ * @param changesetPage Page<Changeset>
+ * @param labels ArrayList<String>
+ * @param page <Integer>
+ * @param limit <Integer>
+ */
+{template .network_fragment}
+    {foreach $changeset in $changesetPage.values}
+        <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
+            <td class="author">
+                {call stash.widget.avatarWithName}
+                    {param size: 'small' /}
+                    {param person: $changeset.author /}
+                    {param link: true /}
+                    {param linkExtraClasses: 'secondary-link' /}
+                {/call}
+            </td>
+            <td class="changeset">
+                {call stash.feature.changeset.link}
+                    {param repository: $repository /}
+                    {param changeset: $changeset /}
+                {/call}
+                <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
+                {if length($changeset.parents) >= 2}
+                    {call stash.widget.lozenge.merge}
+                        {param abbreviated: true /}
+                    {/call}
+                {/if}
+            </td>
+            <td class="message"><span>{$changeset.message|truncate:500|escapeHtml}</span></td>
+            <td class="comment-count">
+                {if $changeset.attributes and $changeset.attributes.commentCount}
+                    // looped because $changeset.attributes has sets of values, should only ever loop once
+                    {foreach $count in $changeset.attributes.commentCount}
+                        {call stash.feature.commentCount}
+                            {param count: $count /}
+                        {/call}
+                    {/foreach}
+                {/if}
+            </td>
+            <td class="timestamp">
+                {if $changeset.authorTimestamp}
+                    <time title="{format_date($changeset.authorTimestamp, 'full')}" datetime="{format_date($changeset.authorTimestamp, 'timestamp')}">
+                        {format_date($changeset.authorTimestamp, 'shortAge')}
+                    </time>
+                {else}
+                    <time>Unknown</time>
+                {/if}
+            </td>
+        </tr>
+    {/foreach}
+    {if $changesetPage.size > 0}
+        <tr class="infinitescroll-nav">
+            <td colspan="5" class="nav-links">
+                {if $page > 1}
+                    <a class="scroll-nav scroll-prev" href="?page={$page - 1}">&larr; Prev</a>
+                {/if}
+                {if $changesetPage.size >= $limit}
+                    <a class="scroll-nav scroll-next" href="?page={$page + 1}">Next &rarr;</a>
+                {/if}
+                <commitgraph-javascript style="display: none">
+                    require('plugin/commitgraph/network').applyChangesets([
+                        {foreach $changeset in $changesetPage.values}
+                            {lb}
+                                id: '{$changeset.id}',
+                                href: '{nav_changeset($repository.project, $repository, $changeset.id)}',
+                                {if $labels[$changeset.id]}
+                                    labels: [
+                                        {foreach $label in $labels[$changeset.id]}
+                                            {lb}
+                                                name: '{$label.displayId}',
+                                                href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.id}'
+                                            {rb}
+                                            {if isLast($label) == false},{/if}
+                                        {/foreach}
+                                    ],
+                                {/if}
+                                parents: [
+                                    {foreach $parentChangeset in $changeset.parents}
+                                        {lb} id: '{$parentChangeset.id}' {rb}
+                                        {if isLast($parentChangeset) == false},{/if}
+                                    {/foreach}
+                                ]
+                            {rb}{if isLast($changeset) == false},{/if}
+                        {/foreach}
+                    ]);
+                </commitgraph-javascript>
+            </td>
+        </tr>
+    {/if}
+{/template}
