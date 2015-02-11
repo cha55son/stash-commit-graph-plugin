@@ -13,6 +13,14 @@
     <resource type="i18n" name="i18n" location="commitgraph"/>
 
     <!-- add our web resources -->
+    <web-resource key="tab-resources" name="tab-resources">
+        <resource type="download" name="icon.css" location="/static/css/icon.css"/>
+        <resource type="download" name="icon-commit-graph.svg" location="/static/img/icon-commit-graph.svg">
+            <param name="content-type" value="image/svg+xml"/>
+        </resource>
+        <context>stash.layout.repository</context>
+    </web-resource>
+
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <resource type="download" name="static/" location="/static"/>
     </web-resource>
@@ -38,6 +46,7 @@
     <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
         <label>Network</label>
         <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
+        <param name="stashIconClass">aui-icon icon-commit-graph</param>
         <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
     </web-item>
 
