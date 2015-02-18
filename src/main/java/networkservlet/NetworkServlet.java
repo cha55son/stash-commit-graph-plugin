@@ -10,6 +10,7 @@ import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.stash.exception.NoSuchEntityException;
 
 import com.atlassian.stash.commit.graph.*;
+import com.atlassian.stash.scm.ScmService;
 import com.atlassian.stash.util.PageRequest;
 import com.google.common.collect.ImmutableMap;
 import com.atlassian.stash.util.PageUtils;
@@ -18,6 +19,7 @@ import com.atlassian.stash.util.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NetworkServlet extends HttpServlet {
@@ -38,17 +41,20 @@ public class NetworkServlet extends HttpServlet {
     private final SoyTemplateRenderer soyTemplateRenderer;
     private final CommitService commitService;
     private final WebResourceManager webResourceManager;
+    private final ScmService scmService;
 
     public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
                           RepositoryService repositoryService,
                           RepositoryMetadataService repositoryMetadataService,
                           CommitService commitService,
-                          WebResourceManager webResourceManager) {
+                          WebResourceManager webResourceManager,
+                          ScmService scmService) {
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.repositoryService = repositoryService;
         this.repositoryMetadataService = repositoryMetadataService;
         this.commitService = commitService;
         this.webResourceManager = webResourceManager;
+        this.scmService = scmService;
     }
 
     @Override
@@ -72,10 +78,8 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
 
-        Page<Branch> branches = this.getBranches(repository);
-        Page<? extends Tag> tags = this.getTags(repository);
-        Page<Changeset> changesets = this.getChangesets(repository, limit, offset);
-        Map<String, ArrayList<Ref>> labels = consolidateLabels(branches, tags);
+        Map<String, List<Ref>> labels = getLabels(repository);
+        Page<Changeset> changesets = this.getChangesets(repository, labels, limit, offset);
 
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
@@ -87,48 +91,27 @@ public class NetworkServlet extends HttpServlet {
         ));
     }
 
-    protected Map<String, ArrayList<Ref>> consolidateLabels(Page<Branch> branches, Page<? extends Tag> tags) {
-        // Consolidate labels (branches/tags) into a map of <commitId>: [<labelName>,...] pairs.
-        Map<String, ArrayList<Ref>> labels = new HashMap<String, ArrayList<Ref>>();
-        for (Branch branch : branches.getValues()) {
-            if (labels.get(branch.getLatestChangeset()) == null) {
-                labels.put(branch.getLatestChangeset(), new ArrayList<Ref>());
+    protected Map<String, List<Ref>> getLabels(Repository repository) {
+        final Map<String, List<Ref>> labels = new HashMap<String, List<Ref>>();
+        scmService.getCommandFactory(repository).heads(new RefCallback() {
+            @Override
+            public void onRef(@Nonnull Ref ref) {
+                List<Ref> refs = labels.get(ref.getLatestChangeset());
+                if (refs == null) {
+                    labels.put(ref.getLatestChangeset(), refs = new ArrayList<Ref>());
+                }
+                refs.add(ref);
             }
-            labels.get(branch.getLatestChangeset()).add(branch);
-        }
-        for (Tag tag : tags.getValues()) {
-            if (labels.get(tag.getLatestChangeset()) == null) {
-                labels.put(tag.getLatestChangeset(), new ArrayList<Ref>());
-            }
-            labels.get(tag.getLatestChangeset()).add(tag);
-        }
+        }).call();
         return labels;
     }
 
-    protected Page<? extends Tag> getTags(Repository repository) {
-        long startTime = System.currentTimeMillis();
-        // Let's just limit to 100 for now.
-        PageRequest pageRequest = PageUtils.newRequest(0, 100);
-        Page<? extends Tag> tags = repositoryMetadataService.getTags(repository, pageRequest, "", null);
-        // System.out.println("    Tag listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
-        return tags;
-    }
-
-    protected Page<Branch> getBranches(Repository repository) {
-        long startTime = System.currentTimeMillis();
-        // Let's just limit to 100 for now.
-        PageRequest pageRequest = PageUtils.newRequest(0, 100);
-        RepositoryBranchesRequest branchRequest = new RepositoryBranchesRequest.Builder()
-                                                                         .repository(repository)
-                                                                         .build();
-        Page<Branch> branches = repositoryMetadataService.getBranches(branchRequest, pageRequest);
-        // System.out.println(" Branch listing time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
-        return branches;
-    }
-
-    protected Page<Changeset> getChangesets(final Repository repository, final Integer limit, final Integer offset) {
+    protected Page<Changeset> getChangesets(final Repository repository,
+                                            final Map<String, List<Ref>> labels,
+                                            final Integer limit,
+                                            final Integer offset) {
         final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
-        TraversalRequest request = new TraversalRequest.Builder().repository(repository).build();
+        TraversalRequest request = new TraversalRequest.Builder().repository(repository).include(labels.keySet()).build();
         final Integer counter = 0;
         long startTime = System.currentTimeMillis();
         commitService.traverse(request, new TraversalCallback() {
