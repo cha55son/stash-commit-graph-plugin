@@ -125,7 +125,7 @@
                                         {foreach $label in $labels[$changeset.id]}
                                             {lb}
                                                 name: '{$label.displayId}',
-                                                href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.id}'
+                                                href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.displayId}'
                                             {rb}
                                             {if isLast($label) == false},{/if}
                                         {/foreach}

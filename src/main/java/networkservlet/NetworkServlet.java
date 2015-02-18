@@ -93,7 +93,7 @@ public class NetworkServlet extends HttpServlet {
 
     protected Map<String, List<Ref>> getLabels(Repository repository) {
         final Map<String, List<Ref>> labels = new HashMap<String, List<Ref>>();
-        scmService.getCommandFactory(repository).heads(new RefCallback() {
+        scmService.getCommandFactory(repository).heads(new AbstractRefCallback() {
             @Override
             public void onRef(@Nonnull Ref ref) {
                 List<Ref> refs = labels.get(ref.getLatestChangeset());
