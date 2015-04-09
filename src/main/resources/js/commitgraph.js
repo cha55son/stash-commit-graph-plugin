@@ -48,11 +48,11 @@
                 url: this.urls.commits,
                 data: { limit: this.ajax.limit }
             }),
-            $.ajax({ 
-                url: this.urls.branches, 
+            $.ajax({
+                url: this.urls.branches,
                 data: { limit: this.ajax.limit }
             }),
-            $.ajax({ 
+            $.ajax({
                 url: this.urls.tags,
                 data: { limit: this.ajax.limit }
             })
@@ -107,7 +107,7 @@
                         branchCommits.push(dupsRemoved[i]);
                 },
                 complete: function() {
-                    if (ajaxCnt-- === 0) 
+                    if (ajaxCnt-- === 0)
                         deferred.resolve(branchCommits);
                 }
             });
@@ -155,62 +155,61 @@
         var self = this;
         var nodes = [];
         var branchCnt = 0;
-        var reserve = [];
+        var currentBranchHeadOrder = [];
         var branches = { };
 
         var getBranch = function(sha) {
             if (isEmpty(branches[sha])) {
                 branches[sha] = branchCnt;
-                reserve.push(branchCnt++);
+                currentBranchHeadOrder.push(branchCnt++);
             }
             return branches[sha];
         };
 
         var commitLen = this.commits.length;
         for (var i = 0; i < commitLen; i++) {
+            // Through commits in descending chronological order
             var commit = this.commits[i];
-            var branch = getBranch(commit.id);
+            var branchNumber = getBranch(commit.id);
             var parentCnt = commit.parents.length;
-            var offset = reserve.indexOf(branch);
+            var offset = currentBranchHeadOrder.indexOf(branchNumber);
             var routes = [];
 
-            if (parentCnt == 1) {
-                // Create branch
-                if (!isEmpty(branches[commit.parents[0].id])) {
-                    for (var j = offset + 1; j < reserve.length; j++)
-                        routes.push([j, j - 1, reserve[j]]);
-                    for (var j = 0; j < offset; j++)
-                        routes.push([j, j, reserve[j]]);
-                    reserve.splice(reserve.indexOf(branch), 1);
-                    routes.push([offset, reserve.indexOf(branches[commit.parents[0].id]), branch]);
-                // Continue straight
-                } else {
-                    // Remove a branch if we have hit the root (first commit).
-                    for (var j = 0; j < reserve.length; j++)
-                        routes.push([j, j, reserve[j]]);
-                    branches[commit.parents[0].id] = branch;
+            if (parentCnt > 0)
+            {
+                if (isEmpty(branches[commit.parents[0].id]))
+                { // Haven't seen its parent yet, continue straight
+                    for (var j = 0; j < currentBranchHeadOrder.length; j++)
+                        routes.push([j, j, currentBranchHeadOrder[j]]);
+                    branches[commit.parents[0].id] = branchNumber;
                 }
-            // Merge branch
-            } else if (parentCnt === 2) {
-                branches[commit.parents[0].id] = branch;
-                for (var j = 0; j < reserve.length; j++)
-                    routes.push([j, j, reserve[j]]);
-                var otherBranch = getBranch(commit.parents[1].id);
-                routes.push([offset, reserve.indexOf(otherBranch), otherBranch]);
+                else
+                { // Seen its parent before, draw the diverge point
+                    for (var j = offset + 1; j < currentBranchHeadOrder.length; j++)
+                        routes.push([j, j - 1, currentBranchHeadOrder[j]]);
+                    for (var j = 0; j < offset; j++)
+                        routes.push([j, j, currentBranchHeadOrder[j]]);
+                    currentBranchHeadOrder.splice(currentBranchHeadOrder.indexOf(branchNumber), 1);
+                    routes.push([offset, currentBranchHeadOrder.indexOf(branches[commit.parents[0].id]), branchNumber]);
+                }
+                if (parentCnt === 2) { // A merge commit: start rendering extra line
+                    var otherBranchNumber = getBranch(commit.parents[1].id);
+                    routes.push([offset, currentBranchHeadOrder.indexOf(otherBranchNumber), otherBranchNumber]);
+                }
             }
             // Add labels to the commit
             var labels = [];
-            for (var j = 0; j < self.branches.length; j++) {
+            for (var j = 0; j < self.branches.length; j++) { // Label branches
                 var branchObj = self.branches[j];
                 if (branchObj.latestChangeset === commit.id)
                     labels.push({ display: self.shortenName(branchObj.displayId), href: self.getBranchLink(branchObj) });
             }
-            for (var j = 0; j < self.tags.length; j++) {
+            for (var j = 0; j < self.tags.length; j++) { //Label commits
                 var tagObj = self.tags[j];
                 if (tagObj.latestChangeset === commit.id)
                     labels.push({ display: self.shortenName(tagObj.displayId), href: self.getBranchLink(tagObj) });
             }
-            nodes.push([commit.id, [offset, branch, self.getCommitLink(commit)], routes, labels]);
+            nodes.push([commit.id, [offset, branchNumber, self.getCommitLink(commit)], routes, labels]);
         }
 
         this.els.$graphBox.children().remove();
@@ -261,10 +260,10 @@
     };
 
     CommitVM.prototype.authorColors = [
-        '#0B3861', '#0B2161', '#0B0B61', '#210B61', '#610B0B', 
-        '#38610B', '#21610B', '#0B610B', '#380B61', '#4C0B5F', 
+        '#0B3861', '#0B2161', '#0B0B61', '#210B61', '#610B0B',
+        '#38610B', '#21610B', '#0B610B', '#380B61', '#4C0B5F',
         '#610B5E', '#610B4B', '#610B38', '#610B21', '#2E2E2E',
-        '#0B6121', '#0B6138', '#0B614B', '#0B615E', '#0B4C5F', 
+        '#0B6121', '#0B6138', '#0B614B', '#0B615E', '#0B4C5F',
         '#61210B', '#61380B', '#5F4C0B', '#5E610B', '#4B610B'
     ];
 
