@@ -27,29 +27,25 @@ define("plugin/commitgraph/graph", [
             var offset = reserve.indexOf(branch);
             var routes = [];
 
-            if (parentCnt == 1) {
-                // Create branch
-                if (!isEmpty(branches[commit.parents[0].id])) {
+            if (parentCnt > 0) {
+                if (isEmpty(branches[commit.parents[0].id])) {
+                    // Haven't seen its parent yet, continue straight
+                    for (var j = 0; j < reserve.length; j++)
+                        routes.push({ from: j, to: j, color: reserve[j] });
+                    branches[commit.parents[0].id] = branch;
+                } else {
+                    // Seen its parent before, draw the diverge point
                     for (var j = offset + 1; j < reserve.length; j++)
                         routes.push({ from: j, to: j - 1, color: reserve[j] });
                     for (var j = 0; j < offset; j++)
                         routes.push({ from: j, to: j, color: reserve[j] });
                     reserve.splice(reserve.indexOf(branch), 1);
                     routes.push({ from: offset, to: reserve.indexOf(branches[commit.parents[0].id]), color: branch });
-                // Continue straight
-                } else {
-                    // Remove a branch if we have hit the root (first commit).
-                    for (var j = 0; j < reserve.length; j++)
-                        routes.push({ from: j, to: j, color: reserve[j] });
-                    branches[commit.parents[0].id] = branch;
                 }
-            // Merge branch
-            } else if (parentCnt === 2) {
-                branches[commit.parents[0].id] = branch;
-                for (var j = 0; j < reserve.length; j++)
-                    routes.push({ from: j, to: j, color: reserve[j] });
-                var otherBranch = getBranch(commit.parents[1].id);
-                routes.push({ from: offset, to: reserve.indexOf(otherBranch), color: otherBranch });
+                if (parentCnt === 2) { // A merge commit: start rendering extra line
+                    var otherBranch = getBranch(commit.parents[1].id);
+                    routes.push({ from: offset, to: reserve.indexOf(otherBranch), color: otherBranch });
+                }
             }
             nodes.push({
                 commitId: commit.id,
