@@ -26,7 +26,7 @@
         // Magic 100 to account for routes crossing multi branches causing a buldge in the route.
         this.options.width = Math.max(1000, deepestBranch * this.options.xStep + (this.options.padding * 2) + 100);
         this.options.height = this.data.length * this.options.yStep;
-        // If the last changeset has parents extend the svg by
+        // If the last commit has parents extend the svg by
         // another half cell.
         if (this.data[this.data.length - 1].commitParents > 0) {
             this.options.height += this.options.yStep / 2; 

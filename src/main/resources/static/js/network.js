@@ -3,15 +3,15 @@ define("plugin/commitgraph/network", [
     'jquery',
     'plugin/commitgraph/graph'
 ], function(exports, $, Graph) {
-    // Call this function to append changesets to the graph.
-    exports.applyChangesets = function(changesets) {
-        if (changesets.length == 0) return;
+    // Call this function to append commits to the graph.
+    exports.applyCommits = function(commits) {
+        if (commits.length == 0) return;
         var $els = $('.commit-row:not(.parsed)');
         var $container = $('.commit-graph .graph-body');
         // Create a new graph container for this round of commits
         var $container = $('<div class="graph-segment"></div>').appendTo('.commit-graph .graph-body');
         $container.wrap('<div class="wrap-stopper"></div>');
-        Graph.parseCommits($container, changesets, $els.eq(0).outerHeight());
+        Graph.parseCommits($container, commits, $els.eq(0).outerHeight());
         // Subsequent graph segments need to be moved up half a cell
         // so the graph looks correct.
         if ($('.commit-graph .graph-body .graph-segment').length >= 2)
@@ -28,14 +28,14 @@ define("plugin/commitgraph/network", [
         // which only returns a small amount of data.
         $nextLink.attr('href', $nextLink.attr('href') + '&contentsOnly=true');
     };
-    var getChangesets = function() {
+    var getCommits = function() {
         eval($('commitgraph-javascript:last').html());
     };
     $(document).ready(function() {
         var $scroller = $('tbody.infinitescroll');
         var $loader = $('.commitgraph-loading-indicator').spin('large').hide();
         hideLinks();
-        getChangesets();
+        getCommits();
         $scroller.infinitescroll({
             navSelector: 'tr.infinitescroll-nav',
             nextSelector: 'a.scroll-next:last',
@@ -55,9 +55,9 @@ define("plugin/commitgraph/network", [
                 $loader.html('No more history');
                 $scroller.infinitescroll('pause');
             }
-        }, function(newChangesets) {
+        }, function(newCommits) {
             hideLinks();
-            getChangesets();
+            getCommits();
         });
     });
 })(jQuery);

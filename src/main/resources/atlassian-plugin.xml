@@ -7,6 +7,9 @@
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
         <param name="plugin-icon">static/img/pluginIcon.png</param>
         <param name="plugin-logo">static/img/pluginLogo.png</param>
+        <permissions>
+            <permission>execute_java</permission>
+        </permissions>
     </plugin-info>
 
     <!-- add our i18n resource -->
@@ -18,51 +21,38 @@
         <resource type="download" name="icon-commit-graph.svg" location="/static/img/icon-commit-graph.svg">
             <param name="content-type" value="image/svg+xml"/>
         </resource>
-        <context>stash.layout.repository</context>
+        <context>bitbucket.layout.repository</context>
     </web-resource>
 
     <web-resource key="commitgraph-resources" name="commitgraph Web Resources">
         <resource type="download" name="static/" location="/static"/>
     </web-resource>
 
-    <!-- publish our component -->
-    <component key="myPluginComponent" class="com.plugin.commitgraph.MyPluginComponentImpl" public="true">
-        <interface>com.plugin.commitgraph.MyPluginComponent</interface>
-    </component>
-
-    <!-- import from the product container -->
-    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
-    <component-import key="soyTemplateRenderer" interface="com.atlassian.soy.renderer.SoyTemplateRenderer"/>
-    <component-import key="userManager" interface="com.atlassian.sal.api.user.UserManager"/>
-    <component-import key="projectService" interface="com.atlassian.stash.project.ProjectService"/>
-    <component-import key="repositoryService" interface="com.atlassian.stash.repository.RepositoryService"/>
-    <component-import key="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
-
     <servlet name="Network Servlet" i18n-name-key="network-servlet.name" key="networkservlet" class="networkservlet.NetworkServlet">
         <description key="network-servlet.description">The Network Servlet Plugin</description>
         <url-pattern>/network/*</url-pattern>
     </servlet>
 
-    <web-item key="network-plugin-tab" name="Repository navigation tab" section="stash.repository.nav" weight="30">
+    <web-item key="network-plugin-tab" name="Repository navigation tab" section="bitbucket.repository.nav" weight="30">
         <label>Network</label>
-        <condition class="com.atlassian.stash.web.conditions.RepositoryNotEmptyCondition"/>
-        <param name="stashIconClass">aui-icon icon-commit-graph</param>
+        <condition class="com.atlassian.bitbucket.web.conditions.RepositoryNotEmptyCondition"/>
+        <param name="iconClass">aui-icon icon-commit-graph</param>
         <link>/plugins/servlet/network/${repository.project.key}/${repository.slug}</link>
     </web-item>
 
-    <stash-resource key="network-soy-templates" name="Network Soy Templates">
+    <client-resource key="network-soy-templates" name="Network Soy Templates">
         <directory location="/static/">
             <include>/**/*.soy</include>
         </directory>
-        <dependency>com.atlassian.stash.stash-web-plugin:server-soy-templates</dependency>
-    </stash-resource>
+        <dependency>com.atlassian.bitbucket.server.bitbucket-web:server-soy-templates</dependency>
+    </client-resource>
 
-    <stash-resource key="network-page" name="Network Page Resources">
-        <context>stash.plugin.network</context>
+    <client-resource key="network-page" name="Network Page Resources">
+        <context>bitbucket.plugin.network</context>
 
         <directory location="/static/">
             <exclude>/**/*.soy</exclude>
         </directory>
-        <dependency>com.atlassian.stash.stash-web-plugin:global</dependency>
-    </stash-resource>
+        <dependency>com.atlassian.bitbucket.server.bitbucket-web:global</dependency>
+    </client-resource>
 </atlassian-plugin>
