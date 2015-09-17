@@ -7,9 +7,6 @@
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
         <param name="plugin-icon">static/img/pluginIcon.png</param>
         <param name="plugin-logo">static/img/pluginLogo.png</param>
-        <permissions>
-            <permission>execute_java</permission>
-        </permissions>
     </plugin-info>
 
     <!-- add our i18n resource -->
@@ -53,6 +50,6 @@
         <directory location="/static/">
             <exclude>/**/*.soy</exclude>
         </directory>
-        <dependency>com.atlassian.bitbucket.server.bitbucket-web:global</dependency>
+        <dependency>com.atlassian.bitbucket.server.bitbucket-web-api:jquery</dependency>
     </client-resource>
 </atlassian-plugin>

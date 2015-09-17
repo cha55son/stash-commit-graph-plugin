@@ -5,7 +5,7 @@ define("plugin/commitgraph/network", [
 ], function(exports, $, Graph) {
     // Call this function to append commits to the graph.
     exports.applyCommits = function(commits) {
-        if (commits.length == 0) return;
+        if (commits.length === 0) return;
         var $els = $('.commit-row:not(.parsed)');
         var $container = $('.commit-graph .graph-body');
         // Create a new graph container for this round of commits
