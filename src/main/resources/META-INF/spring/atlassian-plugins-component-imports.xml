@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:osgi="http://www.springframework.org/schema/osgi"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+                           http://www.springframework.org/schema/osgi
+                           http://www.springframework.org/schema/osgi/spring-osgi.xsd">
+
+    <osgi:reference id="authenticationContext" interface="com.atlassian.bitbucket.auth.AuthenticationContext"/>
+    <osgi:reference id="commitService" interface="com.atlassian.bitbucket.commit.CommitService"/>
+    <osgi:reference id="repositoryService" interface="com.atlassian.bitbucket.repository.RepositoryService"/>
+    <osgi:reference id="scmService" interface="com.atlassian.bitbucket.scm.ScmService"/>
+    <osgi:reference id="securityService" interface="com.atlassian.bitbucket.user.SecurityService"/>
+    <osgi:reference id="soyTemplateRenderer" interface="com.atlassian.soy.renderer.SoyTemplateRenderer"/>
+    <osgi:reference id="webResourceManager" interface="com.atlassian.plugin.webresource.WebResourceManager"/>
+
+</beans>

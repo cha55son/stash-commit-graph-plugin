@@ -1,17 +1,17 @@
-{namespace stash.plugin}
+{namespace bitbucket.plugin}
 
 /**
  * @param repository Repository
- * @param changesetPage Page<Changeset>
+ * @param commitPage Page<Commit>
  * @param labels ArrayList<String>
  * @param page <Integer>
  * @param limit <Integer>
  */
 {template .network}
-{webResourceManager_requireResourcesForContext('stash.plugin.network')}
+{webResourceManager_requireResourcesForContext('bitbucket.plugin.network')}
 <html>
 <head>
-    <meta name="decorator" content="stash.repository.general">
+    <meta name="decorator" content="bitbucket.repository.general">
     <meta name="projectKey" content="{$repository.project.key}">
     <meta name="repositorySlug" content="{$repository.slug}">
     <meta name="activeTab" content="network-plugin-tab">
@@ -29,7 +29,7 @@
                 <table class="aui commits-table">
                     <thead>
                         <th class="author">Author</th>
-                        <th class="changeset">Commit</th>
+                        <th class="commit">Commit</th>
                         <th class="message">Message</th>
                         <th class="comment-count"></th>
                         <th class="timestamp">Commit Date</th>
@@ -37,7 +37,7 @@
                     <tbody class="infinitescroll">
                         {call .network_fragment}
                             {param repository: $repository /}
-                            {param changesetPage: $changesetPage /}
+                            {param commitPage: $commitPage /}
                             {param labels: $labels /}
                             {param page: $page /}
                             {param limit: $limit /}
@@ -56,49 +56,49 @@
 
 /**
  * @param repository Repository
- * @param changesetPage Page<Changeset>
+ * @param commitPage Page<Commit>
  * @param labels ArrayList<String>
  * @param page <Integer>
  * @param limit <Integer>
  */
 {template .network_fragment}
-    {foreach $changeset in $changesetPage.values}
-        <tr data-changesetid="{$changeset.id}" class="commit-row {if length($changeset.parents) >= 2}merge{/if}">
+    {foreach $commit in $commitPage.values}
+        <tr data-commitid="{$commit.id}" class="commit-row {if length($commit.parents) >= 2}merge{/if}">
             <td class="author">
-                {call stash.widget.avatarWithName}
+                {call bitbucket.internal.widget.avatarWithName}
                     {param size: 'small' /}
-                    {param person: $changeset.author /}
+                    {param person: $commit.author /}
                     {param link: true /}
                     {param linkExtraClasses: 'secondary-link' /}
                 {/call}
             </td>
-            <td class="changeset">
-                {call stash.feature.changeset.link}
+            <td class="commit">
+                {call bitbucket.internal.feature.commit.link}
                     {param repository: $repository /}
-                    {param changeset: $changeset /}
+                    {param commit: $commit /}
                 {/call}
                 <!-- show merge lozenge/icon if is a merge commit, eg has 2+ parents -->
-                {if length($changeset.parents) >= 2}
-                    {call stash.widget.lozenge.merge}
+                {if length($commit.parents) >= 2}
+                    {call bitbucket.internal.widget.lozenge.merge}
                         {param abbreviated: true /}
                     {/call}
                 {/if}
             </td>
-            <td class="message"><span>{$changeset.message|truncate:500|escapeHtml}</span></td>
+            <td class="message"><span>{$commit.message|truncate:500|escapeHtml}</span></td>
             <td class="comment-count">
-                {if $changeset.attributes and $changeset.attributes.commentCount}
-                    // looped because $changeset.attributes has sets of values, should only ever loop once
-                    {foreach $count in $changeset.attributes.commentCount}
-                        {call stash.feature.commentCount}
+                {if $commit.attributes and $commit.attributes.commentCount}
+                    // looped because $commit.attributes has sets of values, should only ever loop once
+                    {foreach $count in $commit.attributes.commentCount}
+                        {call bitbucket.internal.feature.commentCount}
                             {param count: $count /}
                         {/call}
                     {/foreach}
                 {/if}
             </td>
             <td class="timestamp">
-                {if $changeset.authorTimestamp}
-                    <time title="{format_date($changeset.authorTimestamp, 'full')}" datetime="{format_date($changeset.authorTimestamp, 'timestamp')}">
-                        {format_date($changeset.authorTimestamp, 'shortAge')}
+                {if $commit.authorTimestamp}
+                    <time title="{format_date($commit.authorTimestamp, 'full')}" datetime="{format_date($commit.authorTimestamp, 'timestamp')}">
+                        {format_date($commit.authorTimestamp, 'shortAge')}
                     </time>
                 {else}
                     <time>Unknown</time>
@@ -106,24 +106,24 @@
             </td>
         </tr>
     {/foreach}
-    {if $changesetPage.size > 0}
+    {if $commitPage.size > 0}
         <tr class="infinitescroll-nav">
             <td colspan="5" class="nav-links">
                 {if $page > 1}
                     <a class="scroll-nav scroll-prev" href="?page={$page - 1}">&larr; Prev</a>
                 {/if}
-                {if $changesetPage.size >= $limit}
+                {if $commitPage.size >= $limit}
                     <a class="scroll-nav scroll-next" href="?page={$page + 1}">Next &rarr;</a>
                 {/if}
                 <commitgraph-javascript style="display: none">
-                    require('plugin/commitgraph/network').applyChangesets([
-                        {foreach $changeset in $changesetPage.values}
+                    require('plugin/commitgraph/network').applyCommits([
+                        {foreach $commit in $commitPage.values}
                             {lb}
-                                id: '{$changeset.id}',
-                                href: '{nav_changeset($repository.project, $repository, $changeset.id)}',
-                                {if $labels[$changeset.id]}
+                                id: '{$commit.id}',
+                                href: '{nav_commit($repository.project, $repository, $commit.id)}',
+                                {if $labels[$commit.id]}
                                     labels: [
-                                        {foreach $label in $labels[$changeset.id]}
+                                        {foreach $label in $labels[$commit.id]}
                                             {lb}
                                                 name: '{$label.displayId}',
                                                 href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.displayId}'
@@ -133,12 +133,12 @@
                                     ],
                                 {/if}
                                 parents: [
-                                    {foreach $parentChangeset in $changeset.parents}
-                                        {lb} id: '{$parentChangeset.id}' {rb}
-                                        {if isLast($parentChangeset) == false},{/if}
+                                    {foreach $parentCommit in $commit.parents}
+                                        {lb} id: '{$parentCommit.id}' {rb}
+                                        {if isLast($parentCommit) == false},{/if}
                                     {/foreach}
                                 ]
-                            {rb}{if isLast($changeset) == false},{/if}
+                            {rb}{if isLast($commit) == false},{/if}
                         {/foreach}
                     ]);
                 </commitgraph-javascript>
