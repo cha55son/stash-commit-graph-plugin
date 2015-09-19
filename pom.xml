@@ -119,9 +119,9 @@
         </plugins>
     </build>
     <properties>
-        <stash.version>3.6.1</stash.version>
-        <stash.data.version>3.6.1</stash.data.version>
-        <amps.version>5.0.13</amps.version>
+        <stash.version>3.11.3</stash.version>
+        <stash.data.version>3.11.3</stash.data.version>
+        <amps.version>5.1.18</amps.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
     </properties>
 </project>
