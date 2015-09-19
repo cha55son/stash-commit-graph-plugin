@@ -1,7 +1,7 @@
 ![Commit Graph](http://i.imgur.com/yPSMwCH.png)
 # Installation
 
-Refer to the Atlassian Marketplace. Installing plugin versions that are not meant for your Stash version can cause stability issues.
+Refer to the Atlassian Marketplace. Installing plugin versions that are not meant for your Bitbucket Server version can cause stability issues.
 
 # Development
 

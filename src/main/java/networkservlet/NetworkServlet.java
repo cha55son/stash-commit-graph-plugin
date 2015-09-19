@@ -1,24 +1,23 @@
 package networkservlet;
 
+import com.atlassian.bitbucket.auth.AuthenticationContext;
+import com.atlassian.bitbucket.commit.Commit;
+import com.atlassian.bitbucket.commit.CommitRequest;
+import com.atlassian.bitbucket.commit.CommitService;
+import com.atlassian.bitbucket.commit.graph.*;
+import com.atlassian.bitbucket.repository.AbstractRefCallback;
+import com.atlassian.bitbucket.repository.Ref;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.repository.RepositoryService;
+import com.atlassian.bitbucket.scm.ScmService;
+import com.atlassian.bitbucket.user.ApplicationUser;
+import com.atlassian.bitbucket.user.SecurityService;
+import com.atlassian.bitbucket.util.Page;
+import com.atlassian.bitbucket.util.PageUtils;
+import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
-
-import com.atlassian.stash.content.Changeset;
-import com.atlassian.stash.repository.*;
-import com.atlassian.stash.commit.CommitService;
-import com.atlassian.stash.user.SecurityService;
-import com.atlassian.plugin.webresource.WebResourceManager;
-import com.atlassian.stash.exception.NoSuchEntityException;
-
-import com.atlassian.stash.commit.graph.*;
-import com.atlassian.stash.user.StashAuthenticationContext;
-import com.atlassian.stash.user.StashUser;
-import com.atlassian.stash.util.*;
-import com.atlassian.stash.scm.ScmService;
 import com.google.common.collect.ImmutableMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
@@ -32,36 +31,32 @@ import java.util.List;
 import java.util.Map;
 
 public class NetworkServlet extends HttpServlet {
-    private static final Logger log = LoggerFactory.getLogger(NetworkServlet.class);
 
-    static final String NETWORK_PAGE = "stash.plugin.network";
-    static final String NETWORK_PAGE_FRAGMENT = "stash.plugin.network_fragment";
+    static final String NETWORK_PAGE = "bitbucket.plugin.network";
+    static final String NETWORK_PAGE_FRAGMENT = "bitbucket.plugin.network_fragment";
 
-    private final RepositoryService repositoryService;
-    private final RepositoryMetadataService repositoryMetadataService;
-    private final SoyTemplateRenderer soyTemplateRenderer;
+    private final AuthenticationContext authenticationContext;
     private final CommitService commitService;
-    private final WebResourceManager webResourceManager;
-    private final SecurityService securityService;
-    private final StashAuthenticationContext stashAuthenticationContext;
+    private final RepositoryService repositoryService;
     private final ScmService scmService;
+    private final SecurityService securityService;
+    private final SoyTemplateRenderer soyTemplateRenderer;
+    private final WebResourceManager webResourceManager;
 
-    public NetworkServlet(SoyTemplateRenderer soyTemplateRenderer,
-                          RepositoryService repositoryService,
-                          RepositoryMetadataService repositoryMetadataService,
+    public NetworkServlet(AuthenticationContext authenticationContext,
                           CommitService commitService,
-                          WebResourceManager webResourceManager,
+                          RepositoryService repositoryService,
+                          ScmService scmService,
                           SecurityService securityService,
-                          StashAuthenticationContext stashAuthenticationContext,
-                          ScmService scmService) {
-        this.soyTemplateRenderer = soyTemplateRenderer;
-        this.repositoryService = repositoryService;
-        this.repositoryMetadataService = repositoryMetadataService;
+                          SoyTemplateRenderer soyTemplateRenderer,
+                          WebResourceManager webResourceManager) {
+        this.authenticationContext = authenticationContext;
         this.commitService = commitService;
-        this.webResourceManager = webResourceManager;
-        this.securityService = securityService;
-        this.stashAuthenticationContext = stashAuthenticationContext;
+        this.repositoryService = repositoryService;
         this.scmService = scmService;
+        this.securityService = securityService;
+        this.soyTemplateRenderer = soyTemplateRenderer;
+        this.webResourceManager = webResourceManager;
     }
 
     @Override
@@ -80,7 +75,7 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
         final Repository repository = repositoryService.getBySlug(components[1], components[2]);
-        final StashUser user = stashAuthenticationContext.getCurrentUser();
+        final ApplicationUser user = authenticationContext.getCurrentUser();
         // Ensure we have a valid repository and user
         if (repository == null || user == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -88,26 +83,26 @@ public class NetworkServlet extends HttpServlet {
         }
 
         Map<String, List<Ref>> labels = getLabels(repository);
-        Page<Changeset> changesets = this.getChangesets(repository, labels, limit, offset);
+        Page<Commit> commits = this.getCommits(repository, labels, limit, offset);
 
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
-        render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.<String, Object>of(
-            "repository", repository,
-            "changesetPage", changesets,
-            "labels", labels,
-            "limit", limit,
-            "page", (page + 1)
+        render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.of(
+                "repository", repository,
+                "commitPage", commits,
+                "labels", labels,
+                "limit", limit,
+                "page", (page + 1)
         ));
     }
 
     protected Map<String, List<Ref>> getLabels(Repository repository) {
-        final Map<String, List<Ref>> labels = new HashMap<String, List<Ref>>();
+        final Map<String, List<Ref>> labels = new HashMap<>();
         scmService.getCommandFactory(repository).heads(new AbstractRefCallback() {
             @Override
             public boolean onRef(@Nonnull Ref ref) {
-                List<Ref> refs = labels.get(ref.getLatestChangeset());
+                List<Ref> refs = labels.get(ref.getLatestCommit());
                 if (refs == null) {
-                    labels.put(ref.getLatestChangeset(), refs = new ArrayList<Ref>());
+                    labels.put(ref.getLatestCommit(), refs = new ArrayList<>());
                 }
                 refs.add(ref);
                 return true;
@@ -116,34 +111,28 @@ public class NetworkServlet extends HttpServlet {
         return labels;
     }
 
-    protected Page<Changeset> getChangesets(final Repository repository,
+    protected Page<Commit> getCommits(final Repository repository,
                                             final Map<String, List<Ref>> labels,
                                             final Integer limit,
                                             final Integer offset) {
-        final ArrayList<Changeset> changesets = new ArrayList<Changeset>();
+        final ArrayList<Commit> commits = new ArrayList<>();
         TraversalRequest request = new TraversalRequest.Builder().repository(repository).include(labels.keySet()).build();
-        final Integer counter = 0;
-        long startTime = System.currentTimeMillis();
-        final StashUser user = stashAuthenticationContext.getCurrentUser();
+        final ApplicationUser user = authenticationContext.getCurrentUser();
         commitService.traverse(request, new TraversalCallback() {
             private Integer counter;
             @Override
-            public void onStart(TraversalContext context) {
+            public void onStart(@Nonnull TraversalContext context) {
                                                         this.counter = 0;
                                                                          }
             @Override
-            public TraversalStatus onNode(final CommitGraphNode node) {
-                Boolean captured = false;
+            public TraversalStatus onNode(final @Nonnull CommitGraphNode node) {
                 if (counter >= offset && counter < (offset + limit)) {
-                    securityService.impersonating(user, "Reading repository changesets")
-                        .call(new UncheckedOperation<Boolean>() {
-                            @Override
-                            public Boolean perform() {
-                                changesets.add(commitService.getChangeset(repository, node.getCommit().getId()));
-                                return true;
-                            }
+                    securityService.impersonating(user, "Reading repository commits")
+                        .call(() -> {
+                            commits.add(commitService.getCommit(
+                                    new CommitRequest.Builder(repository, node.getCommit().getId()).build()));
+                            return true;
                         });
-                    captured = true;
                 } else if (counter >= (offset + limit)) {
                     return TraversalStatus.FINISH;
                 }
@@ -156,9 +145,9 @@ public class NetworkServlet extends HttpServlet {
                 }
             }
         });
-        // System.out.println("Graph traversal time: " + String.valueOf(System.currentTimeMillis() - startTime) + "ms");
+
         // Convert the arraylist to a page
-        return PageUtils.createPage(changesets, PageUtils.newRequest(0, changesets.size()));
+        return PageUtils.createPage(commits, PageUtils.newRequest(0, commits.size()));
     }
 
     protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {
