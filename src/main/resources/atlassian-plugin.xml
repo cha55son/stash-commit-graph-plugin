@@ -7,6 +7,7 @@
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
         <param name="plugin-icon">static/img/pluginIcon.png</param>
         <param name="plugin-logo">static/img/pluginLogo.png</param>
+        <param name="atlassian-data-center-compatible">true</param>
     </plugin-info>
 
     <!-- add our i18n resource -->
