@@ -133,13 +133,16 @@
             ]).attr({ fill: color, stroke: 'none' });
             var textAttrs = { fill: '#FFF', font: '11px monospace', 'text-anchor': 'start' };
             var labelAttrs = $.extend({ cursor: 'pointer' }, textAttrs);
+            var tagAttrs = $.extend({}, labelAttrs, { 'font-style': 'italic', fill: '#FFB' });
+            var branchAttrs = $.extend({}, labelAttrs, { fill: '#BFB' });
             // Create the labels and link to their respective pages
             var labels = this.paper.set();
             var startX = 0;
             for (var i = 0; i < point.labels.length; i++) {
-                var text = this.paper.text(startX, 0, point.labels[i].name).attr(labelAttrs);
+                var label = point.labels[i];
+                var text = this.paper.text(startX, 0, label.name).attr(label.type == 'TAG' ? tagAttrs : branchAttrs);
                 startX += text.getBBox().width;
-                text._label = point.labels[i];
+                text._label = label;
                 text.click(function() { window.open(this._label.href); });
                 labels.push(text);
                 if (i < point.labels.length - 1) {
