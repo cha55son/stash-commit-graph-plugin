@@ -125,8 +125,9 @@
                                     labels: [
                                         {foreach $label in $labels[$commit.id]}
                                             {lb}
-                                                name: '{$label.displayId}',
-                                                href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.displayId}'
+                                                name: '{$label.displayId|escapeJs}',
+                                                type: '{$label.type}',
+                                                href: '{nav_repo_browse($repository.project.key, $repository.slug)}?at={$label.displayId|escapeJs}'
                                             {rb}
                                             {if isLast($label) == false},{/if}
                                         {/foreach}
