@@ -1,60 +1,59 @@
 package networkservlet;
 
-import com.atlassian.bitbucket.auth.AuthenticationContext;
 import com.atlassian.bitbucket.commit.Commit;
-import com.atlassian.bitbucket.commit.CommitRequest;
-import com.atlassian.bitbucket.commit.CommitService;
-import com.atlassian.bitbucket.commit.graph.*;
-import com.atlassian.bitbucket.repository.AbstractRefCallback;
+import com.atlassian.bitbucket.commit.CommitEnricher;
+import com.atlassian.bitbucket.io.SingleLineOutputHandler;
 import com.atlassian.bitbucket.repository.Ref;
 import com.atlassian.bitbucket.repository.Repository;
 import com.atlassian.bitbucket.repository.RepositoryService;
-import com.atlassian.bitbucket.scm.ScmService;
-import com.atlassian.bitbucket.user.ApplicationUser;
-import com.atlassian.bitbucket.user.SecurityService;
+import com.atlassian.bitbucket.repository.SimpleBranch;
+import com.atlassian.bitbucket.repository.SimpleTag;
+import com.atlassian.bitbucket.scm.CommitsCommandParameters;
+import com.atlassian.bitbucket.scm.git.GitScm;
+import com.atlassian.bitbucket.scm.git.command.GitCommand;
+import com.atlassian.bitbucket.scm.git.command.GitScmCommandBuilder;
 import com.atlassian.bitbucket.util.Page;
+import com.atlassian.bitbucket.util.PageRequest;
+import com.atlassian.bitbucket.util.PageRequestImpl;
 import com.atlassian.bitbucket.util.PageUtils;
 import com.atlassian.plugin.webresource.WebResourceManager;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 import com.google.common.collect.ImmutableMap;
 
-import javax.annotation.Nonnull;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class NetworkServlet extends HttpServlet {
 
+    private final static String FORMAT = "%H|%P|%aN|%aE|%at".replace( "|", "%x02" ) + "%n%B%n%x03END%x04";
     static final String NETWORK_PAGE = "bitbucket.plugin.network";
     static final String NETWORK_PAGE_FRAGMENT = "bitbucket.plugin.network_fragment";
 
-    private final AuthenticationContext authenticationContext;
-    private final CommitService commitService;
     private final RepositoryService repositoryService;
-    private final ScmService scmService;
-    private final SecurityService securityService;
+    private final CommitEnricher commitEnricher;
+    private final GitScm gitScm;
     private final SoyTemplateRenderer soyTemplateRenderer;
     private final WebResourceManager webResourceManager;
 
-    public NetworkServlet(AuthenticationContext authenticationContext,
-                          CommitService commitService,
-                          RepositoryService repositoryService,
-                          ScmService scmService,
-                          SecurityService securityService,
+    public NetworkServlet(RepositoryService repositoryService,
+                          CommitEnricher commitEnricher,
+                          GitScm gitScm,
                           SoyTemplateRenderer soyTemplateRenderer,
                           WebResourceManager webResourceManager) {
-        this.authenticationContext = authenticationContext;
-        this.commitService = commitService;
         this.repositoryService = repositoryService;
-        this.scmService = scmService;
-        this.securityService = securityService;
+        this.commitEnricher = commitEnricher;
+        this.gitScm = gitScm;
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.webResourceManager = webResourceManager;
     }
@@ -75,15 +74,13 @@ public class NetworkServlet extends HttpServlet {
             return;
         }
         final Repository repository = repositoryService.getBySlug(components[1], components[2]);
-        final ApplicationUser user = authenticationContext.getCurrentUser();
-        // Ensure we have a valid repository and user
-        if (repository == null || user == null) {
+        if (repository == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        Map<String, List<Ref>> labels = getLabels(repository);
-        Page<Commit> commits = this.getCommits(repository, labels, limit, offset);
+        Map<String, List<Ref>> labels = this.getLabels(repository);
+        Page<Commit> commits = this.getCommits(repository, limit, offset);
 
         webResourceManager.requireResource("com.plugin.commitgraph.commitgraph:commitgraph-resources");
         render(resp, (contentsOnly ? NETWORK_PAGE_FRAGMENT : NETWORK_PAGE), ImmutableMap.of(
@@ -95,59 +92,73 @@ public class NetworkServlet extends HttpServlet {
         ));
     }
 
-    protected Map<String, List<Ref>> getLabels(Repository repository) {
+    protected Map<String, List<Ref>> getLabels(Repository repository) throws IOException {
         final Map<String, List<Ref>> labels = new HashMap<>();
-        scmService.getCommandFactory(repository).heads(new AbstractRefCallback() {
-            @Override
-            public boolean onRef(@Nonnull Ref ref) {
-                List<Ref> refs = labels.get(ref.getLatestCommit());
-                if (refs == null) {
-                    labels.put(ref.getLatestCommit(), refs = new ArrayList<>());
+        SingleLineOutputHandler sloh = new SingleLineOutputHandler();
+        GitScmCommandBuilder showRef = gitScm.getCommandBuilderFactory().builder( repository ).command("show-ref");
+        showRef.argumentAt(0, "--heads" );
+        showRef.argumentAt(1, "--tags" );
+        showRef.argumentAt(2, "--dereference");
+        GitCommand<String> showRefCmd = showRef.build(sloh);
+        String result = showRefCmd.synchronous().call();
+        if (result != null) {
+            StringReader r = new StringReader(result);
+            BufferedReader br = new BufferedReader(r);
+            String line;
+
+            // Loop through 1st time to construct ArrayLists.
+            while ((line = br.readLine()) != null) {
+                if (line.length() > 40) {
+                    String hash = line.substring(0, 40);
+                    labels.put(hash, new ArrayList<>());
                 }
-                refs.add(ref);
-                return true;
             }
-        }).call();
+
+            // Loop through a 2nd time to fill them.
+            r = new StringReader(result);
+            br = new BufferedReader(r);
+            while ((line = br.readLine()) != null) {
+                if (line.length() > 40) {
+                    Ref ref;
+                    String hash = line.substring(0, 40);
+                    String id = line.substring(41).trim();
+                    if (id.endsWith("^{}")) {
+                        id = id.substring(0, id.length() - 3);
+                    }
+                    if (id.startsWith("refs/tags/")) {
+                        String displayId = id.substring("refs/tags/".length());
+                        ref = new SimpleTag.Builder().hash(hash).displayId(displayId).id(id).latestCommit(hash).build();
+                    } else {
+                        String displayId = id.substring("refs/heads/".length());
+                        ref = new SimpleBranch.Builder().displayId(displayId).id(id).latestCommit(hash).build();
+                    }
+                    labels.get(hash).add(ref);
+                }
+            }
+        }
         return labels;
     }
 
     protected Page<Commit> getCommits(final Repository repository,
-                                            final Map<String, List<Ref>> labels,
                                             final Integer limit,
                                             final Integer offset) {
-        final ArrayList<Commit> commits = new ArrayList<>();
-        TraversalRequest request = new TraversalRequest.Builder().repository(repository).include(labels.keySet()).build();
-        final ApplicationUser user = authenticationContext.getCurrentUser();
-        commitService.traverse(request, new TraversalCallback() {
-            private Integer counter;
-            @Override
-            public void onStart(@Nonnull TraversalContext context) {
-                                                        this.counter = 0;
-                                                                         }
-            @Override
-            public TraversalStatus onNode(final @Nonnull CommitGraphNode node) {
-                if (counter >= offset && counter < (offset + limit)) {
-                    securityService.impersonating(user, "Reading repository commits")
-                        .call(() -> {
-                            commits.add(commitService.getCommit(
-                                    new CommitRequest.Builder(repository, node.getCommit().getId()).build()));
-                            return true;
-                        });
-                } else if (counter >= (offset + limit)) {
-                    return TraversalStatus.FINISH;
-                }
-                // If there are no parents then we are at the root node.
-                if (node.getParents().size() > 0) {
-                    counter++;
-                    return TraversalStatus.CONTINUE;
-                } else {
-                    return TraversalStatus.FINISH;
-                }
-            }
-        });
-
-        // Convert the arraylist to a page
-        return PageUtils.createPage(commits, PageUtils.newRequest(0, commits.size()));
+        PageRequest pr = new PageRequestImpl( offset, limit );
+        pr = pr.buildRestrictedPageRequest( 50 );
+        CommitsCommandParameters ccp = new CommitsCommandParameters.Builder().all( true ).build();
+        PagedCommitOutputHandler pcoh = new PagedCommitOutputHandler( repository, ccp, pr );
+        GitScmCommandBuilder revList = gitScm.getCommandBuilderFactory().builder(repository).command("rev-list");
+        revList.argumentAt(0, "--pretty=" + FORMAT );
+        revList.argumentAt(1, "--branches=*" );
+        revList.argumentAt(2, "--tags=*" );
+        revList.argumentAt(3, "--topo-order" );
+        GitCommand<Page<Commit>> revListCmd = revList.build(pcoh);
+        Page<Commit> commits = revListCmd.synchronous().call();
+        if ( commits == null ) {
+            commits = PageUtils.createEmptyPage( pr );
+        } else {
+            commits = commitEnricher.enrichPage(repository, commits, Collections.<String>emptySet());
+        }
+        return commits;
     }
 
     protected void render(HttpServletResponse resp, String templateName, Map<String, Object> data) throws IOException, ServletException {
