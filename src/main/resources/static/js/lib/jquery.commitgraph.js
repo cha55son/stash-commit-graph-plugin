@@ -153,6 +153,17 @@
             }
             var textBBox = labels.getBBox();
             var textPadding = 3, LRPadding = 3;
+
+            // issue #56: Display issue - huge grey box on Commit Graph
+            // modded by tirolerstefan (using hint of darkdams, thanks)
+            // https://github.com/cha55son/stash-commit-graph-plugin/issues/56#issuecomment-171966535
+            textBBox.height=14;
+            textBBox.x=0;
+            textBBox.y=-7;
+            textBBox.x2=startX;
+            textBBox.y2=7;
+            textBBox.width=startX;
+
             // Draw the label box
             var labelBox = this.paper
                 .rect(triXPos - textBBox.width - textPadding * 2 - LRPadding * 2,
