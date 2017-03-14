@@ -150,7 +150,7 @@ public class NetworkServlet extends HttpServlet {
         revList.argumentAt(0, "--pretty=" + FORMAT );
         revList.argumentAt(1, "--branches=*" );
         revList.argumentAt(2, "--tags=*" );
-        revList.argumentAt(3, "--topo-order" );
+        revList.argumentAt(3, "--date-order" );
         GitCommand<Page<Commit>> revListCmd = revList.build(pcoh);
         Page<Commit> commits = revListCmd.synchronous().call();
         if ( commits == null ) {
