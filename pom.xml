@@ -5,7 +5,7 @@
 
     <groupId>com.plugin.commitgraph</groupId>
     <artifactId>commitgraph</artifactId>
-    <version>2.1</version>
+    <version>3.0</version>
 
     <organization>
         <name>Chason Choate</name>
@@ -111,7 +111,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.6.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -121,9 +121,9 @@
     </build>
 
     <properties>
-        <bitbucket.version>4.0.2</bitbucket.version>
+        <bitbucket.version>5.0.1</bitbucket.version>
         <bitbucket.data.version>${bitbucket.version}</bitbucket.data.version>
-        <amps.version>6.1.0</amps.version>
+        <amps.version>6.3.0</amps.version>
         <plugin.testrunner.version>1.2.3</plugin.testrunner.version>
     </properties>
 </project>
