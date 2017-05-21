@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 
 public class NetworkServlet extends HttpServlet {
 
-    private final static String FORMAT = "%H|%P|%aN|%aE|%at".replace( "|", "%x02" ) + "%n%B%n%x03END%x04";
     static final String NETWORK_PAGE = "bitbucket.plugin.network";
     static final String NETWORK_PAGE_FRAGMENT = "bitbucket.plugin.network_fragment";
 
@@ -147,7 +146,7 @@ public class NetworkServlet extends HttpServlet {
         CommitsCommandParameters ccp = new CommitsCommandParameters.Builder().all( true ).build();
         PagedCommitOutputHandler pcoh = new PagedCommitOutputHandler( repository, ccp, pr );
         GitScmCommandBuilder revList = gitScm.getCommandBuilderFactory().builder(repository).command("rev-list");
-        revList.argumentAt(0, "--pretty=" + FORMAT );
+        revList.argumentAt(0, "--pretty=" + pcoh.getCommitReader().getFormat() );
         revList.argumentAt(1, "--branches=*" );
         revList.argumentAt(2, "--tags=*" );
         revList.argumentAt(3, "--topo-order" );
