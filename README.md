@@ -1,4 +1,7 @@
 ![Commit Graph](http://i.imgur.com/yPSMwCH.png)
+
+[*Looking for a project contributor/maintainer!*](https://github.com/cha55son/stash-commit-graph-plugin/issues/79)
+
 # Installation
 
 Refer to the Atlassian Marketplace. Installing plugin versions that are not meant for your Bitbucket Server version can cause stability issues.
