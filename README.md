@@ -1,6 +1,6 @@
-![Commit Graph](http://i.imgur.com/yPSMwCH.png)
+[*Not in active development. Looking for a project contributor/maintainer!*](https://github.com/cha55son/stash-commit-graph-plugin/issues/79)
 
-[*Looking for a project contributor/maintainer!*](https://github.com/cha55son/stash-commit-graph-plugin/issues/79)
+![Commit Graph](http://i.imgur.com/yPSMwCH.png)
 
 # Installation
 
