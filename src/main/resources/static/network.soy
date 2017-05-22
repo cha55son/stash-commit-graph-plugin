@@ -18,7 +18,17 @@
     <title>{$repository.slug} / Network</title>
 </head>
 <body>
-    <h2 class="page-panel-content-header">Network</h2>
+    <header class="aui-page-header page-header-flex">
+        <div class="aui-page-header-inner">
+            <div class="aui-page-header-main">
+                <ol class="aui-nav aui-nav-breadcrumbs repository-breadcrumbs" resolved="">
+                    <li><a href="/projects/{$repository.project.key}" title="{$repository.project.name}">{$repository.project.name}</a></li>
+                    <li class="aui-nav-selected"><a href="/projects/{$repository.project.key}/repos/{$repository.slug}/browse" title="{$repository.name}">{$repository.name}</a></li>
+                </ol>
+                <h2 class="page-panel-content-header">Network</h2>
+            </div><!-- .aui-page-header-main -->
+        </div><!-- .aui-page-header-inner -->
+    </header>
     <table class="commit-graph-table">
         <tbody>
             <td class="commit-graph">
